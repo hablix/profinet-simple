@@ -55,7 +55,7 @@ namespace CaEthernet
         public string Build()
         {
             var postHex = _statusHex + _contentHex;
-            var lengthHex = Program.ByteArrayToHex(new byte[] { (byte)(_contentHex.Length / 2) }).PadLeft(4, '0');
+            var lengthHex = Program.ByteArrayToHex(new byte[] { ((byte)(postHex.Length / 2))}).PadLeft(4, '0');
 
             if (_contentHex.Length % 2 == 1)
                 _contentHex += "0";

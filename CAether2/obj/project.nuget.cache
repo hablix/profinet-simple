@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "+LPc7fKm+CoXMGs+VavfqfNiAjR2jN57W8kUoiPU6GpJYYhqoA92l7NbrleDb/Pss0Vn4IH9SGHdxM6ue5cLCQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\eiaGruppe1\\Documents\\Uebung2\\CAether2\\CAether2.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\eiaGruppe1\\.nuget\\packages\\packetdotnet\\1.0.3\\packetdotnet.1.0.3.nupkg.sha512",
+    "C:\\Users\\eiaGruppe1\\.nuget\\packages\\sharppcap\\5.1.0\\sharppcap.5.1.0.nupkg.sha512",
+    "C:\\Users\\eiaGruppe1\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\4.6.0\\system.runtime.compilerservices.unsafe.4.6.0.nupkg.sha512"
+  ],
+  "logs": []
+}

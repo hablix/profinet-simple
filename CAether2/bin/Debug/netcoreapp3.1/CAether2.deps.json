@@ -1,0 +1,126 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v3.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v3.1": {
+      "CAether2/1.0.0": {
+        "dependencies": {
+          "SharpPcap": "5.1.0",
+          "PcapDotNet.Base": "1.0.4.25027",
+          "PcapDotNet.Core": "1.0.4.25149",
+          "PcapDotNet.Core.Extensions": "1.0.4.25151",
+          "PcapDotNet.Packets": "1.0.4.25028"
+        },
+        "runtime": {
+          "CAether2.dll": {}
+        }
+      },
+      "PacketDotNet/1.0.3": {
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "4.6.0"
+        },
+        "runtime": {
+          "lib/netstandard2.0/PacketDotNet.dll": {
+            "assemblyVersion": "1.0.3.0",
+            "fileVersion": "1.0.3.0"
+          }
+        }
+      },
+      "SharpPcap/5.1.0": {
+        "dependencies": {
+          "PacketDotNet": "1.0.3"
+        },
+        "runtime": {
+          "lib/netstandard2.0/SharpPcap.dll": {
+            "assemblyVersion": "5.1.0.0",
+            "fileVersion": "5.1.0.0"
+          }
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/4.6.0": {},
+      "PcapDotNet.Base/1.0.4.25027": {
+        "runtime": {
+          "PcapDotNet.Base.dll": {
+            "assemblyVersion": "1.0.4.25027",
+            "fileVersion": "1.0.4.0"
+          }
+        }
+      },
+      "PcapDotNet.Core/1.0.4.25149": {
+        "runtime": {
+          "PcapDotNet.Core.dll": {
+            "assemblyVersion": "1.0.4.25149",
+            "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "PcapDotNet.Core.Extensions/1.0.4.25151": {
+        "runtime": {
+          "PcapDotNet.Core.Extensions.dll": {
+            "assemblyVersion": "1.0.4.25151",
+            "fileVersion": "1.0.4.0"
+          }
+        }
+      },
+      "PcapDotNet.Packets/1.0.4.25028": {
+        "runtime": {
+          "PcapDotNet.Packets.dll": {
+            "assemblyVersion": "1.0.4.25028",
+            "fileVersion": "1.0.4.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "CAether2/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PacketDotNet/1.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-as2yA4KwFRJNU8PxvddZO2SkhLPcoUtIGP/eGLMQEce483DKlE4GzqT28rj9iUso6jihvILD1iNw13TtUN1nGQ==",
+      "path": "packetdotnet/1.0.3",
+      "hashPath": "packetdotnet.1.0.3.nupkg.sha512"
+    },
+    "SharpPcap/5.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-INqQi8KGANmVIJyPS/iGdqbF6AA2030egIEbhT6p0CNryjC6+z8AdDEnSTmSQHj3veqf0SXfCB3JDe5NG4PNdQ==",
+      "path": "sharppcap/5.1.0",
+      "hashPath": "sharppcap.5.1.0.nupkg.sha512"
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.6.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-HxozeSlipUK7dAroTYwIcGwKDeOVpQnJlpVaOkBz7CM4TsE5b/tKlQBZecTjh6FzcSbxndYaxxpsBMz+wMJeyw==",
+      "path": "system.runtime.compilerservices.unsafe/4.6.0",
+      "hashPath": "system.runtime.compilerservices.unsafe.4.6.0.nupkg.sha512"
+    },
+    "PcapDotNet.Base/1.0.4.25027": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PcapDotNet.Core/1.0.4.25149": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PcapDotNet.Core.Extensions/1.0.4.25151": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "PcapDotNet.Packets/1.0.4.25028": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

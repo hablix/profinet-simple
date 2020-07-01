@@ -1,0 +1,158 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETCoreApp,Version=v3.1": {
+      "PacketDotNet/1.0.3": {
+        "type": "package",
+        "dependencies": {
+          "System.Runtime.CompilerServices.Unsafe": "4.6.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/PacketDotNet.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/PacketDotNet.dll": {}
+        }
+      },
+      "SharpPcap/5.1.0": {
+        "type": "package",
+        "dependencies": {
+          "PacketDotNet": "1.0.3"
+        },
+        "compile": {
+          "lib/netstandard2.0/SharpPcap.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/SharpPcap.dll": {}
+        }
+      },
+      "System.Runtime.CompilerServices.Unsafe/4.6.0": {
+        "type": "package",
+        "compile": {
+          "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "PacketDotNet/1.0.3": {
+      "sha512": "as2yA4KwFRJNU8PxvddZO2SkhLPcoUtIGP/eGLMQEce483DKlE4GzqT28rj9iUso6jihvILD1iNw13TtUN1nGQ==",
+      "type": "package",
+      "path": "packetdotnet/1.0.3",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/PacketDotNet.dll",
+        "lib/netstandard2.0/PacketDotNet.dll",
+        "packetdotnet.1.0.3.nupkg.sha512",
+        "packetdotnet.nuspec"
+      ]
+    },
+    "SharpPcap/5.1.0": {
+      "sha512": "INqQi8KGANmVIJyPS/iGdqbF6AA2030egIEbhT6p0CNryjC6+z8AdDEnSTmSQHj3veqf0SXfCB3JDe5NG4PNdQ==",
+      "type": "package",
+      "path": "sharppcap/5.1.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/SharpPcap.dll",
+        "sharppcap.5.1.0.nupkg.sha512",
+        "sharppcap.nuspec"
+      ]
+    },
+    "System.Runtime.CompilerServices.Unsafe/4.6.0": {
+      "sha512": "HxozeSlipUK7dAroTYwIcGwKDeOVpQnJlpVaOkBz7CM4TsE5b/tKlQBZecTjh6FzcSbxndYaxxpsBMz+wMJeyw==",
+      "type": "package",
+      "path": "system.runtime.compilerservices.unsafe/4.6.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netcoreapp2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "lib/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard1.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.dll",
+        "ref/netstandard2.0/System.Runtime.CompilerServices.Unsafe.xml",
+        "system.runtime.compilerservices.unsafe.4.6.0.nupkg.sha512",
+        "system.runtime.compilerservices.unsafe.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETCoreApp,Version=v3.1": [
+      "SharpPcap >= 5.1.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\eiaGruppe1\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\eiaGruppe1\\Documents\\Uebung2\\CAether2\\CAether2.csproj",
+      "projectName": "CAether2",
+      "projectPath": "C:\\Users\\eiaGruppe1\\Documents\\Uebung2\\CAether2\\CAether2.csproj",
+      "packagesPath": "C:\\Users\\eiaGruppe1\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\eiaGruppe1\\Documents\\Uebung2\\CAether2\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\eiaGruppe1\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "netcoreapp3.1"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "netcoreapp3.1": {
+          "projectReferences": {}
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      }
+    },
+    "frameworks": {
+      "netcoreapp3.1": {
+        "dependencies": {
+          "SharpPcap": {
+            "target": "Package",
+            "version": "[5.1.0, )"
+          }
+        },
+        "imports": [
+          "net461",
+          "net462",
+          "net47",
+          "net471",
+          "net472",
+          "net48"
+        ],
+        "assetTargetFallback": true,
+        "warn": true,
+        "frameworkReferences": {
+          "Microsoft.NETCore.App": {
+            "privateAssets": "all"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.301\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

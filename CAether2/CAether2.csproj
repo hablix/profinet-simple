@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="S7netplus" Version="0.4.0" />
     <PackageReference Include="SharpPcap" Version="5.1.0" />
   </ItemGroup>
 

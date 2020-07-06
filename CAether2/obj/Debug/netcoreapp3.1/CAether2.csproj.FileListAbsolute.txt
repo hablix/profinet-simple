@@ -33,7 +33,6 @@ C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\bin\Debug\netcoreapp3.1\PcapDotNe
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.csprojAssemblyReference.cache
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.AssemblyInfoInputs.cache
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.AssemblyInfo.cs
-C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.csproj.CoreCompileInputs.cache
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.csproj.CopyComplete
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.dll
 C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.pdb
@@ -58,3 +57,5 @@ C:\Users\maetzler\Desktop\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.cspr
 C:\Users\maetzler\Desktop\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.dll
 C:\Users\maetzler\Desktop\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.pdb
 C:\Users\maetzler\Desktop\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.genruntimeconfig.cache
+C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\bin\Debug\netcoreapp3.1\S7.Net.dll
+C:\Users\eiaGruppe1\Documents\Uebung2\CAether2\obj\Debug\netcoreapp3.1\CAether2.csproj.CoreCompileInputs.cache

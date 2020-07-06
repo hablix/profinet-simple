@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v3.1": {
       "CAether2/1.0.0": {
         "dependencies": {
+          "S7netplus": "0.4.0",
           "SharpPcap": "5.1.0",
           "PcapDotNet.Base": "1.0.4.25027",
           "PcapDotNet.Core": "1.0.4.25149",
@@ -26,6 +27,14 @@
           "lib/netstandard2.0/PacketDotNet.dll": {
             "assemblyVersion": "1.0.3.0",
             "fileVersion": "1.0.3.0"
+          }
+        }
+      },
+      "S7netplus/0.4.0": {
+        "runtime": {
+          "lib/netstandard2.0/S7.Net.dll": {
+            "assemblyVersion": "0.4.0.0",
+            "fileVersion": "0.4.0.0"
           }
         }
       },
@@ -87,6 +96,13 @@
       "sha512": "sha512-as2yA4KwFRJNU8PxvddZO2SkhLPcoUtIGP/eGLMQEce483DKlE4GzqT28rj9iUso6jihvILD1iNw13TtUN1nGQ==",
       "path": "packetdotnet/1.0.3",
       "hashPath": "packetdotnet.1.0.3.nupkg.sha512"
+    },
+    "S7netplus/0.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-RTna3gtkiqLuqF5m5G0Q6B2VHXzlz7AIoWGS3YkMXX779iMxh47dHGNOC+BOEtv4a23yQrPIoA4I7fcSn+welQ==",
+      "path": "s7netplus/0.4.0",
+      "hashPath": "s7netplus.0.4.0.nupkg.sha512"
     },
     "SharpPcap/5.1.0": {
       "type": "package",

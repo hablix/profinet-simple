@@ -81,7 +81,7 @@ namespace CaEthernet
                 "\n 'i' for identification request " +
                 "\n 's' for set name to listed mac " +
                 "\n 'z' for set name to custom mac " +
-                "\n 'u' for set name to custom mac " +
+                "\n 'u' ... " +
                 "\n 'x' to exit");
             var val = Console.ReadLine();
 
@@ -126,7 +126,13 @@ namespace CaEthernet
             {
                 try
                 {
-                    
+                    PrintAllResponses();
+                    Console.WriteLine("type device to respond to: ");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in mac adress index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    Rcp1(index);
                 }
                 catch (Exception ex)
                 { }
@@ -140,9 +146,53 @@ namespace CaEthernet
         {
             Console.WriteLine("neuer Stationsname: ");
             var value = Console.ReadLine();
-            SendSetRequest(mac, "0202", Program.ByteArrayToHex(Encoding.ASCII.GetBytes(value)));
+            SendSetRequest(mac, "0202", value.StringToHex());
             Recive(10, DefaultPacketHandler);
 
+        }
+
+        private static void Rcp1(int index)
+        {
+            string ip = "";
+            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
+            {
+                if (dcpdata._optionHex == "0102")
+                {
+                    var counter = 2 * 2;
+                    ip = dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts();
+                }
+            }
+            var pack = new RpcHeader()
+            {
+                header = "",
+                body = new NrdDataReqResp()
+                {
+                    header = "",
+                    body = new IodHeader()
+                    {
+                        header = "",
+                        body = ""
+                    }.Build()
+                }.Build()
+            };
+            Send(_collectedResponses[index].mac, ip, pack.Build().HexToByteArray());
+        }
+
+        private void Do()
+        {
+            var pack = new RpcHeader()
+            {
+                header = "04 00 ",
+                body = new NrdDataReqResp()
+                {
+                    header = "",
+                    body = new IodHeader()
+                    {
+                        header = "",
+                        body = ""
+                    }.Build()
+                }.Build()
+            };
         }
 
         private static void Get(string mac)
@@ -232,7 +282,7 @@ namespace CaEthernet
             if (packet.Ethernet.Destination.Equals(new MacAddress(_macSource1)))
             {
                 string macsource = packet.Ethernet.Source.ToString();
-                string content = ByteArrayToHex(packet.Buffer);
+                string content = packet.Buffer.ByteArrayToHex();
 
                 try
                 {
@@ -261,7 +311,7 @@ namespace CaEthernet
             if (packet.Ethernet.Destination.Equals(new MacAddress(_macSource1)))
             {
                 string macsource = packet.Ethernet.Source.ToString();
-                string content = ByteArrayToHex(packet.Buffer);
+                string content = packet.Buffer.ByteArrayToHex();
                 try
                 {
                     var dcppacket = new DcpPacket(content);
@@ -302,7 +352,7 @@ namespace CaEthernet
                 //Console.WriteLine(_collectedResponses[i].dcpPacket.ToString());
                 foreach (var dcpdata in _collectedResponses[i].dcpPacket.GetDcpDataPackages())
                 {
-                    Console.WriteLine(dcpdata.ToString());
+                    
                     if(dcpdata._optionHex == "0102")
                     {
                         // parse ip adress:
@@ -310,29 +360,11 @@ namespace CaEthernet
                         Console.WriteLine("ip      " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
                         Console.WriteLine("subnet  " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
                         Console.WriteLine("gateway " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
-
                     }
+                    else
+                        Console.WriteLine(dcpdata.ToString());
                 }
             }
-        }
-
-        // HELPERS
-        public static byte[] HexToByteArray(string hex)
-        {
-            if (hex.Length % 2 == 1)
-                hex = 0 + hex;
-            return Enumerable.Range(0, hex.Length)
-                             .Where(x => x % 2 == 0)
-                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                             .ToArray();
-        }
-
-        public static string ByteArrayToHex(byte[] ba)
-        {
-            StringBuilder hex = new StringBuilder(ba.Length * 2);
-            foreach (byte b in ba)
-                hex.AppendFormat("{0:x2}", b);
-            return hex.ToString();
         }
 
         /// <summary>
@@ -440,7 +472,7 @@ namespace CaEthernet
 
         public static string HexToString(this string hex)
         {
-            return Encoding.UTF8.GetString(Program.HexToByteArray(hex));
+            return Encoding.UTF8.GetString(HexToByteArray(hex));
         }
 
         public static int HexToInt(this string hex)
@@ -491,6 +523,20 @@ namespace CaEthernet
             return Encoding.UTF8.GetString(bytearray);
         }
 
+        public static byte[] Append(this byte[] original, byte[] append)
+        {
+            byte[] ret = new byte[original.Length + append.Length];
+            Array.Copy(original, 0, ret, 0, original.Length);
+            Array.Copy(append, 0, ret, original.Length, append.Length);
+            return ret;
+        }
+
+        public static string HexShort(this string hex)
+        {
+            return hex.Replace(" ", "");
+        }
+
+
         // int
         public static string IntToHex(this int value, int padding)
         {
@@ -498,6 +544,16 @@ namespace CaEthernet
             var pad = hex.PadLeft(padding, '0');
             return pad.Substring(0, padding);
         }
+
+        //public static byte[] IntToByteArray(this int value, int padding)
+        //{
+        //    var all = BitConverter.GetBytes(value);
+        //    if (padding == 2)
+        //        return new byte[] { all[all.Length - 2], all[all.Length - 1] };
+
+        //    if (padding == 4)
+        //        return new byte[] { all[all.Length - 4], all[all.Length - 3], all[all.Length - 2], all[all.Length - 1] };
+        //}
 
 
         //public static string HexGetHexLength(this string hex, int padding)

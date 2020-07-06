@@ -34,7 +34,7 @@ namespace CaEthernet
         {
             _optionHex = packageRawHex.Substring(0, 4);
             var lengthHex = packageRawHex.Substring(4, 4);
-            var lengthInt = (Program.HexToByteArray(lengthHex)[0] << 8) | Program.HexToByteArray(lengthHex)[1];
+            var lengthInt = lengthHex.HexToInt();// (Program.HexToByteArray(lengthHex)[0] << 8) | Program.HexToByteArray(lengthHex)[1];
             _statusHex = packageRawHex.Substring(6, 2);
             _contentHex = packageRawHex.Substring(8, lengthInt * 2);
             rest = packageRawHex.Substring(8 + lengthInt * 2);
@@ -55,17 +55,17 @@ namespace CaEthernet
         public string Build()
         {
             var postHex = _statusHex + _contentHex;
-            var lengthHex = Program.ByteArrayToHex(new byte[] { ((byte)(postHex.Length / 2))}).PadLeft(4, '0');
+            //var lengthHex = postHex.HexGetHexLength(4); //Program.ByteArrayToHex(new byte[] { ((byte)(postHex.Length / 2))}).PadLeft(4, '0');
 
             if (_contentHex.Length % 2 == 1)
                 _contentHex += "0";
-            var s = _optionHex + lengthHex + postHex;
+            var s = _optionHex + postHex.HexGetNrOfBytes().IntToHex(4) + postHex;
             return s;
         }
 
         public override string ToString()
         {
-            return _optionHex + " content: " + Encoding.ASCII.GetString(Program.HexToByteArray(_contentHex));
+            return _optionHex + " content: " + _contentHex.HexToString();
         }
     }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -8,6 +9,7 @@ using PcapDotNet.Core;
 using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ethernet;
 using PcapDotNet.Packets.IpV4;
+using PcapDotNet.Packets.Transport;
 
 namespace CaEthernet
 {
@@ -22,6 +24,7 @@ namespace CaEthernet
 
         // hier mac adressde einfügen
         static string _macSource1 = "EC:B1:D7:60:BD:8E"; //1 //141.76.83.220
+        static string _ipSource1 = "141.76.83.220";
         //static string _macSource2 = "C4:E9:84:00:41:2D"; //2 //172.11.4.82 //nicht genuztz
 
         //static string macSiemens = "00:0E:8C:87:29:55";
@@ -78,6 +81,7 @@ namespace CaEthernet
                 "\n 'i' for identification request " +
                 "\n 's' for set name to listed mac " +
                 "\n 'z' for set name to custom mac " +
+                "\n 'u' for set name to custom mac " +
                 "\n 'x' to exit");
             var val = Console.ReadLine();
 
@@ -116,6 +120,18 @@ namespace CaEthernet
                 catch (Exception ex)
                 { Console.WriteLine(ex.Message); }
             }
+
+
+            if (val == "u")
+            {
+                try
+                {
+                    
+                }
+                catch (Exception ex)
+                { }
+            }
+
 
             goto begin;
         }
@@ -175,9 +191,18 @@ namespace CaEthernet
                                                                          PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
                                                                          1000)) // read timeout
             {
-                communicator.SendPacket(BuildEthernetPacket(_macSource1, macDest, content));
-                //communicator.SendPacket(BuildEthernetPacket(_macSource2, macDest, content));
+                communicator.SendPacket(BuildEthernetPacket( macDest, content));
+            }
+        }
 
+        static void Send(string macDest, string ipdest, byte[] content)
+        {
+            // Open the output device
+            using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
+                                                                         PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+                                                                         1000)) // read timeout
+            {
+                communicator.SendPacket(BuildUdpPacket(macDest, ipdest, content));
             }
         }
 
@@ -278,6 +303,15 @@ namespace CaEthernet
                 foreach (var dcpdata in _collectedResponses[i].dcpPacket.GetDcpDataPackages())
                 {
                     Console.WriteLine(dcpdata.ToString());
+                    if(dcpdata._optionHex == "0102")
+                    {
+                        // parse ip adress:
+                        var counter = 2*2;
+                        Console.WriteLine("ip      " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
+                        Console.WriteLine("subnet  " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
+                        Console.WriteLine("gateway " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
+
+                    }
                 }
             }
         }
@@ -304,12 +338,12 @@ namespace CaEthernet
         /// <summary>
         /// This function build an Ethernet with payload packet.
         /// </summary>
-        static Packet BuildEthernetPacket(string macsource, string macdest, byte[] content)
+        static Packet BuildEthernetPacket(string macdest, byte[] content)
         {
             EthernetLayer ethernetLayer =
                 new EthernetLayer
                 {
-                    Source = new MacAddress(macsource),
+                    Source = new MacAddress(_macSource1),
                     Destination = new MacAddress(macdest),
                     EtherType = (EthernetType)34962
 
@@ -328,5 +362,147 @@ namespace CaEthernet
             return pack;
         }
 
+
+        private static Packet BuildUdpPacket(string macdest, string ipdest, byte[] content)
+        {
+            EthernetLayer ethernetLayer =
+                new EthernetLayer
+                {
+                    Source = new MacAddress(_macSource1),
+                    Destination = new MacAddress(macdest),
+                    EtherType = EthernetType.None, // Will be filled automatically.
+                };
+
+            IpV4Layer ipV4Layer =
+                new IpV4Layer
+                {
+                    Source = new IpV4Address(_ipSource1),
+                    CurrentDestination = new IpV4Address(ipdest),
+                    Fragmentation = IpV4Fragmentation.None,
+                    HeaderChecksum = null, // Will be filled automatically.
+                    Identification = 123,
+                    Options = IpV4Options.None,
+                    Protocol = null, // Will be filled automatically.
+                    Ttl = 100,
+                    TypeOfService = 0,
+                };
+
+            UdpLayer udpLayer =
+                new UdpLayer
+                {
+                    SourcePort = 34964,
+                    DestinationPort = 34964,
+                    Checksum = null, // Will be filled automatically.
+                    CalculateChecksumValue = true,
+                };
+
+            PayloadLayer payloadLayer =
+                new PayloadLayer
+                {
+                    Data = new Datagram(content),
+                };
+
+            PacketBuilder builder = new PacketBuilder(ethernetLayer, ipV4Layer, udpLayer, payloadLayer);
+
+            return builder.Build(DateTime.Now);
+        }
+
+    }
+
+    // helper class
+    public static class h
+    {
+        /*
+         * UMWANDLUNGEN
+         * 
+         * parsing
+         * byte[] -> hex #
+         * hex -> string #
+         * hex -> int #
+         * 
+         * combining
+         * string -> hex #
+         * int -> hex #
+         * hex -> byte[] #
+         */
+
+
+        // String HEX
+        public static byte[] HexToByteArray(this string hex)
+        {
+            if (hex.Length % 2 == 1)
+                hex = 0 + hex;
+            return Enumerable.Range(0, hex.Length)
+                             .Where(x => x % 2 == 0)
+                             .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                             .ToArray();
+        }
+
+        public static string HexToString(this string hex)
+        {
+            return Encoding.UTF8.GetString(Program.HexToByteArray(hex));
+        }
+
+        public static int HexToInt(this string hex)
+        {
+            var i = int.Parse(hex, System.Globalization.NumberStyles.HexNumber);
+            return i;
+        }
+
+        public static int HexGetNrOfBytes(this string hex)
+        {
+            return hex.Length / 2;
+        }
+
+        public static string HexGetNextBytes(this string hex, ref int counter, int numberOfBytes)
+        {
+            numberOfBytes *= 2;
+            var x = hex.Substring(counter, numberOfBytes);
+            counter += numberOfBytes;
+            return x;
+        }
+
+        // String utf8
+
+        public static string StringToHex(this string utf8)
+        {
+            return ByteArrayToHex(Encoding.UTF8.GetBytes(utf8));
+        }
+
+        // Byte Array
+        public static string ByteArrayToHex(this byte[] bytearray)
+        {
+            StringBuilder hex = new StringBuilder(bytearray.Length * 2);
+            foreach (byte b in bytearray)
+                hex.AppendFormat("{0:x2}", b);
+            return hex.ToString();
+        }
+
+        public static string ByteArrayToStringInts(this byte[] bytearray)
+        {
+            StringBuilder hex = new StringBuilder(bytearray.Length * 2);
+            foreach (byte b in bytearray)
+                hex.AppendFormat("{0}.", b);
+            return hex.ToString();
+        }
+
+        public static string ByteArrayToString(this byte[] bytearray)
+        {
+            return Encoding.UTF8.GetString(bytearray);
+        }
+
+        // int
+        public static string IntToHex(this int value, int padding)
+        {
+            var hex = value.ToString("X");
+            var pad = hex.PadLeft(padding, '0');
+            return pad.Substring(0, padding);
+        }
+
+
+        //public static string HexGetHexLength(this string hex, int padding)
+        //{
+        //    return Program.ByteArrayToHex(new byte[] { (byte)(hex.Length / 2) }).PadLeft(padding, '0');
+        //}
     }
 }

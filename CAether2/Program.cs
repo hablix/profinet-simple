@@ -33,12 +33,6 @@ namespace CaEthernet
 
         static string TRANSACT_ID = "12345678";
 
-        static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
-        static string activityuuid = "dea00001-6c97-11d1-8271-123456789012";
-        static string nulluuid =     "00000000-0000-0000-0000-000000000000";
-
-
-
         static List<Response> _collectedResponses = new List<Response>();
 
         static PacketDevice selectedDevice;
@@ -173,28 +167,32 @@ namespace CaEthernet
                 }
             }
 
-            Send(_collectedResponses[index].mac, ip, GetString(uuid, iodeviceuuid).HexToByteArray());
+            Send(_collectedResponses[index].mac, ip, GetString(uuid).HexToByteArray());
             Recive(10, DefaultPacketHandler);
         }
 
-        public static string GetString(string obid, string identid)
+        public static string GetString(string objectid)
         {
-            var pack = new RpcHeader()
-            {
-                header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
-                body = new NrdDataReqResp()
-                {
-                    //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
-                    header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
-                    body = new IodHeader()
-                    {
-                        // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
-                        header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
-                        body = "",
-                    }.Build()
-                }.Build()
-            };
-            return pack.Build();
+
+            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            return BuilderClass.ReadRequest(objectid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
+
+            //var pack = new RpcHeader()
+            //{
+            //    header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
+            //    body = new NrdDataReqResp()
+            //    {
+            //        //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
+            //        header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
+            //        body = new IodHeader()
+            //        {
+            //            // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
+            //            header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
+            //            body = "",
+            //        }.Build()
+            //    }.Build()
+            //};
+            //return pack.Build();
         }
 
         private static void Get(string mac)
@@ -535,7 +533,7 @@ namespace CaEthernet
 
         public static string HexShort(this string hex)
         {
-            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","");
+            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","").Replace("x","0");
         }
 
 

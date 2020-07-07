@@ -76,20 +76,6 @@ namespace CaEthernet
                 return Guid.Empty;
         }
 
-        public static Guid standardInterfaceGuid()
-        {
-            // "UUID_IO_DeviceInterface":
-            //     UUID("dea00001-6c97-11d1-8271-00a02442df7d"),
-            //"UUID_IO_ControllerInterface":
-            //    UUID("dea00002-6c97-11d1-8271-00a02442df7d"),
-            //"UUID_IO_SupervisorInterface":
-            //    UUID("dea00003-6c97-11d1-8271-00a02442df7d"),
-            //"UUID_IO_ParameterServerInterface":
-            //    UUID("dea00004-6c97-11d1-8271-00a02442df7d"),
-                return new Guid("dea00001-6c97-11d1-8271-00a02442df7d");
-
-        }
-
         public string ip()
         {
             if (_optionHex == "0102")

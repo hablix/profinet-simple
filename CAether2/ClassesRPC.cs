@@ -61,7 +61,7 @@ namespace CaEthernet
         public string Build()
         {
             var all = header + body;
-            all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
             return all;
         }
 
@@ -93,7 +93,8 @@ namespace CaEthernet
         public string Build()
         {
             var all = header + body;
-            all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(16 * 2, lengthsize).Insert(16*2, body.HexGetNrOfBytes().IntToHex(lengthsize));
             return all;
         }
 
@@ -125,7 +126,7 @@ namespace CaEthernet
         public string Build()
         {
             var all = header + body;
-            all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
             return all;
         }
 
@@ -158,7 +159,7 @@ namespace CaEthernet
         public string Build()
         {
             var all = header + body;
-            all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
             return all;
         }
 

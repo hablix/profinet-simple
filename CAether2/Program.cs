@@ -33,6 +33,12 @@ namespace CaEthernet
 
         static string TRANSACT_ID = "12345678";
 
+        static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
+        static string activityuuid = "dea00001-6c97-11d1-8271-123456789012";
+        static string nulluuid =     "00000000-0000-0000-0000-000000000000";
+
+
+
         static List<Response> _collectedResponses = new List<Response>();
 
         static PacketDevice selectedDevice;
@@ -135,7 +141,7 @@ namespace CaEthernet
                     Rcp1(index);
                 }
                 catch (Exception ex)
-                { }
+                { Console.WriteLine(ex.Message); }
             }
 
 
@@ -154,45 +160,41 @@ namespace CaEthernet
         private static void Rcp1(int index)
         {
             string ip = "";
+            string uuid = "";
             foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
             {
-                if (dcpdata._optionHex == "0102")
+                if (dcpdata.ip() != "")
                 {
-                    var counter = 2 * 2;
-                    ip = dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts();
+                    ip = dcpdata.ip();
+                }
+                if (dcpdata.ToGuid() != Guid.Empty)
+                {
+                    uuid = dcpdata.ToGuid().ToString();
                 }
             }
-            var pack = new RpcHeader()
-            {
-                header = "",
-                body = new NrdDataReqResp()
-                {
-                    header = "",
-                    body = new IodHeader()
-                    {
-                        header = "",
-                        body = ""
-                    }.Build()
-                }.Build()
-            };
-            Send(_collectedResponses[index].mac, ip, pack.Build().HexToByteArray());
+
+            Send(_collectedResponses[index].mac, ip, GetString(uuid, iodeviceuuid).HexToByteArray());
+            Recive(10, DefaultPacketHandler);
         }
 
-        private void Do()
+        public static string GetString(string obid, string identid)
         {
             var pack = new RpcHeader()
             {
-                header = "04 00 ",
+                header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
                 body = new NrdDataReqResp()
                 {
-                    header = "",
+                    //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
+                    header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
                     body = new IodHeader()
                     {
-                        header = "",
-                        body = ""
+                        // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
+                        header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
+                        body = "",
                     }.Build()
                 }.Build()
             };
+            return pack.Build();
         }
 
         private static void Get(string mac)
@@ -352,14 +354,14 @@ namespace CaEthernet
                 //Console.WriteLine(_collectedResponses[i].dcpPacket.ToString());
                 foreach (var dcpdata in _collectedResponses[i].dcpPacket.GetDcpDataPackages())
                 {
-                    
-                    if(dcpdata._optionHex == "0102")
+                    if (dcpdata.ToGuid() != Guid.Empty)
+                        Console.WriteLine("guid   " + dcpdata.ToGuid());
+
+                    if (dcpdata.ip() != "")
                     {
-                        // parse ip adress:
-                        var counter = 2*2;
-                        Console.WriteLine("ip      " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
-                        Console.WriteLine("subnet  " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
-                        Console.WriteLine("gateway " + dcpdata._contentHex.HexGetNextBytes(ref counter, 4).HexToByteArray().ByteArrayToStringInts());
+                        Console.WriteLine("ip      " + dcpdata.ip());
+                        Console.WriteLine("subnet  " + dcpdata.subnet());
+                        Console.WriteLine("gateway " + dcpdata.gateway());
                     }
                     else
                         Console.WriteLine(dcpdata.ToString());
@@ -533,7 +535,7 @@ namespace CaEthernet
 
         public static string HexShort(this string hex)
         {
-            return hex.Replace(" ", "");
+            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","");
         }
 
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CaEthernet
 {
@@ -59,6 +60,62 @@ namespace CaEthernet
         public override string ToString()
         {
             return _optionHex + " content: " + _contentHex.HexToString();
+        }
+
+        public Guid ToGuid()
+        {
+            if (_optionHex == "0203")
+            {
+                var preh = _contentHex.Substring(0, 2 * 2);
+                var vendorId = _contentHex.Substring(2*2, 2 * 2);
+                var deviceId = _contentHex.Substring(4 * 2, 2 * 2);
+                var pre = "0001";
+                return new Guid("dea00000-6c97-11d1-8271-" + pre + deviceId + vendorId);
+            }
+            else
+                return Guid.Empty;
+        }
+
+        public static Guid standardInterfaceGuid()
+        {
+            // "UUID_IO_DeviceInterface":
+            //     UUID("dea00001-6c97-11d1-8271-00a02442df7d"),
+            //"UUID_IO_ControllerInterface":
+            //    UUID("dea00002-6c97-11d1-8271-00a02442df7d"),
+            //"UUID_IO_SupervisorInterface":
+            //    UUID("dea00003-6c97-11d1-8271-00a02442df7d"),
+            //"UUID_IO_ParameterServerInterface":
+            //    UUID("dea00004-6c97-11d1-8271-00a02442df7d"),
+                return new Guid("dea00001-6c97-11d1-8271-00a02442df7d");
+
+        }
+
+        public string ip()
+        {
+            if (_optionHex == "0102")
+            {
+                return _contentHex.Substring(2*2, 8).HexToByteArray().ByteArrayToStringInts();
+            }
+            else
+                return "";
+        }
+        public string subnet()
+        {
+            if (_optionHex == "0102")
+            {
+                return _contentHex.Substring(12, 8).HexToByteArray().ByteArrayToStringInts();
+            }
+            else
+                return "";
+        }
+        public string gateway()
+        {
+            if (_optionHex == "0102")
+            {
+                return _contentHex.Substring(16,8).HexToByteArray().ByteArrayToStringInts();
+            }
+            else
+                return "";
         }
     }
 

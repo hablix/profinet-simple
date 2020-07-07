@@ -10,6 +10,7 @@ using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ethernet;
 using PcapDotNet.Packets.IpV4;
 using PcapDotNet.Packets.Transport;
+using S7.Net;
 
 namespace CaEthernet
 {
@@ -81,7 +82,7 @@ namespace CaEthernet
                 "\n 'i' for identification request " +
                 "\n 's' for set name to listed mac " +
                 "\n 'z' for set name to custom mac " +
-                "\n 'u' ... " +
+                "\n 'u' rpc " +
                 "\n 'x' to exit");
             var val = Console.ReadLine();
 
@@ -167,33 +168,86 @@ namespace CaEthernet
                 }
             }
 
-            Send(_collectedResponses[index].mac, ip, GetString(uuid).HexToByteArray());
+            //SendIdentificationRequest();
+
+            //Thread.Sleep(200);
+
+
+            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
+
+            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+            // x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            // y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x);
+
+            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+            //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x);
+
+            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+            //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x);
+
+            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
+            // relation
+            var mac = _macSource1.HexShort();
+           
+
+            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
+            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
+
+            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
+            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
+            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x, "00 00");
+
+            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
+            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
+            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x, "00 00");
+
+            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
+            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
+            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 00");
+
+            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
             Recive(10, DefaultPacketHandler);
         }
 
-        public static string GetString(string objectid)
-        {
+        //public static string GetString(string objectid)
+        //{
 
-            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            return BuilderClass.ReadRequest(objectid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
+        //    //var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+        //    //return BuilderClass.ReadRequest(objectid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
 
-            //var pack = new RpcHeader()
-            //{
-            //    header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
-            //    body = new NrdDataReqResp()
-            //    {
-            //        //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
-            //        header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
-            //        body = new IodHeader()
-            //        {
-            //            // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
-            //            header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
-            //            body = "",
-            //        }.Build()
-            //    }.Build()
-            //};
-            //return pack.Build();
-        }
+        //    //var pack = new RpcHeader()
+        //    //{
+        //    //    header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
+        //    //    body = new NrdDataReqResp()
+        //    //    {
+        //    //        //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
+        //    //        header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
+        //    //        body = new IodHeader()
+        //    //        {
+        //    //            // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
+        //    //            header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
+        //    //            body = "",
+        //    //        }.Build()
+        //    //    }.Build()
+        //    //};
+        //    //return pack.Build();
+        //}
 
         private static void Get(string mac)
         {
@@ -341,30 +395,51 @@ namespace CaEthernet
             }
         }
 
+        private static void HighlightConsole(bool onoff)
+        {
+            if (onoff)
+            {
+                Console.BackgroundColor = ConsoleColor.Yellow;
+                Console.ForegroundColor = ConsoleColor.Black;
+            }
+            else
+            {
+                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = ConsoleColor.White;
+            }
+        }
+
         static void PrintAllResponses()
         {
+            Console.WriteLine("");
+            Console.WriteLine("");
             Console.WriteLine("");
             Console.WriteLine("Awnsers: ");
             for (int i = 0; i < _collectedResponses.Count; i++)
             {
                 Console.WriteLine("");
-                Console.WriteLine(i + ": Adress: " + _collectedResponses[i].mac);
+                Console.WriteLine("");
+                HighlightConsole(true);
+                Console.WriteLine(i + ":     MAC : " + _collectedResponses[i].mac);
+                HighlightConsole(false);
                 //Console.WriteLine(_collectedResponses[i].dcpPacket.ToString());
                 foreach (var dcpdata in _collectedResponses[i].dcpPacket.GetDcpDataPackages())
                 {
                     if (dcpdata.ToGuid() != Guid.Empty)
-                        Console.WriteLine("guid   " + dcpdata.ToGuid());
+                        Console.WriteLine("           guid " + dcpdata.ToGuid());
 
                     if (dcpdata.ip() != "")
                     {
-                        Console.WriteLine("ip      " + dcpdata.ip());
-                        Console.WriteLine("subnet  " + dcpdata.subnet());
-                        Console.WriteLine("gateway " + dcpdata.gateway());
+                        Console.WriteLine("             ip " + dcpdata.ip());
+                        Console.WriteLine("         subnet " + dcpdata.subnet());
+                        Console.WriteLine("        gateway " + dcpdata.gateway());
                     }
                     else
                         Console.WriteLine(dcpdata.ToString());
                 }
             }
+            Console.WriteLine("");
+
         }
 
         /// <summary>
@@ -533,7 +608,7 @@ namespace CaEthernet
 
         public static string HexShort(this string hex)
         {
-            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","").Replace("x","0");
+            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","").Replace("x","0").Replace(":", "");
         }
 
 

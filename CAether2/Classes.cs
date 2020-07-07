@@ -32,6 +32,8 @@ namespace CaEthernet
             var lengthInt = lengthHex.HexToInt();
             _statusHex = packageRawHex.Substring(6, 2);
             _contentHex = packageRawHex.Substring(8, lengthInt * 2);
+            if (lengthInt % 2 == 1)
+                lengthInt += 1;
             rest = packageRawHex.Substring(8 + lengthInt * 2);
 
             if (_optionHex == "0000" && lengthHex == "0000")

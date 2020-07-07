@@ -165,9 +165,21 @@ namespace CaEthernet
         }
     }
 
+    public class ArBlockRequest : IodStandardBase
+    {
+        public const int headersize_c = 58 * 2 + 4*2; // + cminitiatorStationname octetstrin 1-240 byte
+
+        public override int headersize => headersize_c;
+
+        public static explicit operator ArBlockRequest(string hex)
+        {
+            return new ArBlockRequest() { header = hex.Substring(0, headersize_c) };
+        }
+    }
+
     public class IodReleaseBlock : IodStandardBase
     {
-        public const int headersize_c = 32;
+        public const int headersize_c = 32 * 2;
 
         public override int headersize => headersize_c;
 
@@ -189,38 +201,48 @@ namespace CaEthernet
 
         //static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
         public static string myactivityuuid = "dea00001-6c97-11d1-8271-123456789012";
-        public static string mynulluuid = "00000000-0000-0000-0000-000000000000";
+        public static string myarid = "dea00001-6c97-11d1-8271-123456789012";
+        public static string mynulluuid =    "00000000-0000-0000-0000-000000000000";
+        public static string myinitiatorid = "dea00000-6c97-11d1-8271-123456789012";
 
         public static string UUID_IO_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
         public static string UUID_IO_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
         public static string UUID_IO_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
         public static string UUID_IO_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
 
+        
 
-        public static string ReadRequest(string objectid, string identid, string activityid, string NrdDataReqRespBody)
+
+        public static string BuildRpcNrdDataReq(string objectid, string interfaceid, string activityid ,string NrdDataReqRespBody, string operationr2 = "00 05", string packetType1 = "00")
         {
             var pack = new RpcHeader()
             {
                 header =(
-                $"04 00 20 00 - 00 00 00 - 00 " +
+                $"04" + // version
+                $"{packetType1} " + // 0 = request; 2 = response ; 7 = ack
+                $"20 00 " + // flags
+                $"00 00 00" + // drep
+                $"00 " + // serial high
                 $"{objectid} " +
-                $"{identid} " +
+                $"{interfaceid} " +
                 $"{activityid} " +
-                $"(00 00 00 00)" +
-                $"(00 00 00 01) " +
-                $"(00 00 00 01)" +
-                $"(00 05) " +
-                $"ffff ffff" +
-                $"(xx xx) " +
-                $"(00 00) 00 01"
+                $"(00 00 00 00)" + // server boot time
+                $"(00 00 00 01) " + // interface version
+                $"(00 00 00 01) " + // sequence nr
+                $"{operationr2}" + // operation nr // 0 = connect; 2 = read; 5 = implicit read => arid = 0
+                $"ffff" + // interface hint
+                $"ffff" + // hint
+                $"(xx xx) " + // length
+                $"(00 00)" + // fragment nr
+                $" 00 01"
                 ).HexShort(),
                 body = new NrdDataReqResp()
                 {
                     // auch möglich: (00 00 02 51)
                     header =(
-                    "(00 00 00 03)" +
+                    "(00 00 00 ff)" +
                     "(xx xx xx xx) " +
-                    "(00 00 00 03) " +
+                    "(00 00 00 ff) " +
                     "(00 00 00 00) " +
                     "(xx xx xx xx)"
                     ).HexShort(),
@@ -230,12 +252,12 @@ namespace CaEthernet
             return pack.Build();
         }
 
-        public static string BuildIODHeader(string arid, string targetarid, string index)
+        public static string BuildIODHeader(string arid, string targetarid, string index, string blocktype = "0009")
         {
             var x = new IodHeader()
             {
                 header = (
-                        $"(00 09) (xx xx) 01 00" +
+                        $"{blocktype} (xx xx) 01 00" +
                         $"(00 00)" +
                         $"{arid}" +
                         $"(00 00 00 00) (00 00) (00 00) (00 00) " +
@@ -244,6 +266,27 @@ namespace CaEthernet
                         $"{targetarid} (00 00 00 00 - 00 00 00 00)"
                         ).HexShort(),
                 body = "",
+            }.Build();
+            return x;
+        }
+
+        public static string BuildArBlockReq(string arid, string mac6, string ojbectid, string blocktype = "0101", string artype = "0006", string arproperties = "00 00 01 30")
+        {
+            var x = new ArBlockRequest()
+            {
+                header = (
+                        $"{blocktype} (xx xx) 01 00" +
+                        $"{artype}" +
+                        $"{arid}" +
+                        $"(00 00)" + // session key
+                        $"{mac6}" +
+                        $"{ojbectid}" +
+                        $"{arproperties}" + // 3. bit von 0.. 31 muss 1 sein.  also auch 
+                        $"(00 02)" + // timeout factor
+                        $"(88 92)" + // initiator udp rtport
+                        $"(00 04)" + //names length
+                        $"(31 32 33 34)" // name
+                        ).HexShort(),
             }.Build();
             return x;
         }

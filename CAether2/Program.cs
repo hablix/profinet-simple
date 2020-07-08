@@ -25,7 +25,7 @@ namespace CaEthernet
 
         // hier mac adressde einfügen
         static string _macSource1 = "EC:B1:D7:60:BD:8E"; //1 //141.76.83.220
-        static string _ipSource1 = "141.76.83.220";
+        static string _ipSource1 = "172.16.4.101"; //"141.76.83.220";
         //static string _macSource2 = "C4:E9:84:00:41:2D"; //2 //172.11.4.82 //nicht genuztz
 
         //static string macSiemens = "00:0E:8C:87:29:55";
@@ -37,6 +37,8 @@ namespace CaEthernet
         static List<Response> _collectedResponses = new List<Response>();
 
         static PacketDevice selectedDevice;
+
+        static PacketCommunicator communicator;
 
 
         static void Main(string[] args)
@@ -76,13 +78,20 @@ namespace CaEthernet
             // Take the selected adapter
             selectedDevice = allDevices[deviceIndex - 1];
 
-        begin:
+
+            communicator = selectedDevice.Open(100, // name of the device
+                                            PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+                                            1000); // read timeout
+
+
+            begin:
 
             Console.WriteLine("\n\n Type " +
                 "\n 'i' for identification request " +
                 "\n 's' for set name to listed mac " +
                 "\n 'z' for set name to custom mac " +
                 "\n 'u' rpc " +
+                "\n 'a' rpc to all" +
                 "\n 'x' to exit");
             var val = Console.ReadLine();
 
@@ -139,6 +148,22 @@ namespace CaEthernet
                 { Console.WriteLine(ex.Message); }
             }
 
+            if (val == "a")
+            {
+                try
+                {
+                    Console.WriteLine("rpc impl read, connect req to all devices!");
+                    for (int i = 0; i < _collectedResponses.Count; i++) 
+                    {
+                        Rcp1(i);
+                        Thread.Sleep(200);
+                    }
+                    Console.WriteLine("finished.");
+                }
+                catch (Exception ex)
+                { Console.WriteLine(ex.Message); }
+            }
+
 
             goto begin;
         }
@@ -167,10 +192,13 @@ namespace CaEthernet
                     uuid = dcpdata.ToGuid().ToString();
                 }
             }
+            Console.WriteLine("connecting: " + _collectedResponses[index].mac);
+            Console.WriteLine("      uuid: " + uuid);
+            Console.WriteLine("        ip: " + ip);
+
 
             //SendIdentificationRequest();
 
-            //Thread.Sleep(200);
 
 
             var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
@@ -194,35 +222,14 @@ namespace CaEthernet
             //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
 
 
-            // relation
-            var mac = _macSource1.HexShort();
-           
+            Thread.Sleep(100);
 
+            // connect req
+            var mac = _macSource1.HexShort();
             x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
             y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
-
             Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
-            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x, "00 00");
-
-            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
-            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x, "00 00");
-
-            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
-            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 00");
-
-            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-            Recive(10, DefaultPacketHandler);
+            Recive(30, UDPDefaultHandler);
         }
 
         //public static string GetString(string objectid)
@@ -291,9 +298,9 @@ namespace CaEthernet
         static void Send(string macDest, byte[] content)
         {
             // Open the output device
-            using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
-                                                                         PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-                                                                         1000)) // read timeout
+            //using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
+            //                                                             PacketDeviceOpenAttributes.None, // promiscuous mode
+            //                                                             1000)) // read timeout
             {
                 communicator.SendPacket(BuildEthernetPacket( macDest, content));
             }
@@ -301,10 +308,10 @@ namespace CaEthernet
 
         static void Send(string macDest, string ipdest, byte[] content)
         {
-            // Open the output device
-            using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
-                                                                         PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-                                                                         1000)) // read timeout
+            //// Open the output device
+            //using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
+            //                                                             PacketDeviceOpenAttributes.None, // promiscuous 
+            //                                                             1000)) // read timeout
             {
                 communicator.SendPacket(BuildUdpPacket(macDest, ipdest, content));
             }
@@ -317,17 +324,40 @@ namespace CaEthernet
         static void Recive(int number, HandlePacket packetHandler)
         {
             // Open the device
-            using (PacketCommunicator communicator =
-                selectedDevice.Open(65536,                                  // portion of the packet to capture
-                                                                            // 65536 guarantees that the whole packet will be captured on all the link layers
-                                    PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-                                    1000))                                  // read timeout
+            //using (PacketCommunicator communicator =
+            //    selectedDevice.Open(65536,                                  // portion of the packet to capture
+            //                                                                // 65536 guarantees that the whole packet will be captured on all the link layers
+            //                        PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+            //                        1000))                                  // read timeout
             {
                 Console.WriteLine("Listening on " + selectedDevice.Description + "...");
 
                 // start the capture
                 // Callback function invoked by Pcap.Net for every incoming packet
-                communicator.ReceivePackets(20, packetHandler);
+                communicator.ReceivePackets(number, packetHandler);
+            }
+        }
+
+        static void UDPDefaultHandler(Packet packet)
+        {
+            if (packet?.Ethernet?.IpV4?.Destination.ToString() == _ipSource1)
+            {
+                if (packet?.Ethernet?.IpV4?.Udp?.DestinationPort == 34964)
+                {
+                    Console.WriteLine("incoming udp packet at 8894");
+                    try
+                    {
+                        var rcppacket = (RpcHeader) packet.Ethernet.IpV4.Udp.Payload.ToArray().ByteArrayToHex();
+                        var x = rcppacket.getActivityUUID();
+                        if (x.EndsWith(BuilderClass.myuuid_suffix))
+                        {
+                            Console.WriteLine("packet with matching activity id :-)");
+                            Console.WriteLine("packet type" + rcppacket.getPacketType());
+                        }
+                    }
+                    catch (Exception ex)
+                    { Console.WriteLine(ex.Message); }
+                }
             }
         }
 

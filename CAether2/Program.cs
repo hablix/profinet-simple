@@ -84,7 +84,7 @@ namespace CaEthernet
                                             1000); // read timeout
 
 
-            begin:
+        begin:
 
             Console.WriteLine("\n\n Type " +
                 "\n 'i' for identification request " +
@@ -106,7 +106,7 @@ namespace CaEthernet
             if (val == "z")
             {
                 Console.WriteLine("type device to respond to: ");
-                Console.WriteLine("type in mac adress in style 00:00:00:00:00:00" );
+                Console.WriteLine("type in mac adress in style 00:00:00:00:00:00");
                 try
                 {
                     Sationsname(Console.ReadLine());
@@ -153,10 +153,10 @@ namespace CaEthernet
                 try
                 {
                     Console.WriteLine("rpc impl read, connect req to all devices!");
-                    for (int i = 0; i < _collectedResponses.Count; i++) 
+                    for (int i = 0; i < _collectedResponses.Count; i++)
                     {
                         Rcp1(i);
-                        Thread.Sleep(200);
+                        Thread.Sleep(300);
                     }
                     Console.WriteLine("finished.");
                 }
@@ -196,41 +196,66 @@ namespace CaEthernet
             Console.WriteLine("      uuid: " + uuid);
             Console.WriteLine("        ip: " + ip);
 
-
-            //SendIdentificationRequest();
-
-
-
-            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            var y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
-
-            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-            // x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            // y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x);
-
-            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-            //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x);
-
-            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-            //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x);
-
-            //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-            Thread.Sleep(100);
-
-            // connect req
-            var mac = _macSource1.HexShort();
-            x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
-            y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
-            Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter));
             Recive(30, UDPDefaultHandler);
+
+            Thread.Sleep(300);
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0));
+            Recive(30, UDPDefaultHandler);
+
+            Thread.Sleep(400);
+
+            Send(_collectedResponses[index].mac, ip, ConnectRequest(uuid, _macSource1));
+            Recive(30, UDPDefaultHandler);
+
+            Thread.Sleep(400);
+
+            Send(_collectedResponses[index].mac, ip, ReadReq(uuid));
+            Recive(30, UDPDefaultHandler);
+
+
+            Thread.Sleep(400);
+
+            Send(_collectedResponses[index].mac, ip, ConnectionReleaseReq(uuid));
+            Recive(30, UDPDefaultHandler);
+
         }
+
+        //    //SendIdentificationRequest();
+
+
+
+        //    var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+        //    var y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
+
+        //    Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+        //    // x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+        //    // y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x);
+
+        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+        //    //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+        //    //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x);
+
+        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+        //    //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+        //    //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x);
+
+        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+
+
+        //    Thread.Sleep(100);
+
+        //    // connect req
+        //    var mac = _macSource1.HexShort();
+        //    x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
+        //    y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
+        //    Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
+        //    Recive(30, UDPDefaultHandler);
+        //}
 
         //public static string GetString(string objectid)
         //{
@@ -255,6 +280,48 @@ namespace CaEthernet
         //    //};
         //    //return pack.Build();
         //}
+
+        private static byte[] ImplicitReadReq(string objectuuid, string filter)
+        {
+            // vaiireren von: io_device interface uuid;  und die variablen // "00 09", "00 01", "00 00", "00 01"
+            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 05");
+            return y.HexToByteArray();
+        }
+
+        private static byte[] ConnectRequest(string objectuuid, string initiator_mac)
+        {
+            initiator_mac = initiator_mac.HexShort();
+            var x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, initiator_mac, BuilderClass.myinitiatorid);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
+            return y.HexToByteArray();
+        }
+
+        private static byte[] ReadReq(string objectuuid)
+        {
+            // TODO
+            // vaiireren von: io_device interface uuid;  und die variablen
+            var x = BuilderClass.BuildIODHeader(BuilderClass.myarid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 02");
+            return y.HexToByteArray();
+        }
+
+        private static byte[] WriteReq(string objectuuid)
+        {
+            // TODO
+            // vaiireren von: io_device interface uuid;  und die variablen
+            var x = BuilderClass.BuildIODHeader(BuilderClass.myinitiatorid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 02");
+            return y.HexToByteArray();
+        }
+
+        private static byte[] ConnectionReleaseReq(string objectuuid)
+        {
+            var x = BuilderClass.BuildIodReleaseBlockReq(BuilderClass.myarid);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 01");
+            return y.HexToByteArray();
+        }
+    
 
         private static void Get(string mac)
         {
@@ -330,7 +397,7 @@ namespace CaEthernet
             //                        PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
             //                        1000))                                  // read timeout
             {
-                Console.WriteLine("Listening on " + selectedDevice.Description + "...");
+                Console.WriteLine("Listening: " + selectedDevice.Description);
 
                 // start the capture
                 // Callback function invoked by Pcap.Net for every incoming packet
@@ -344,15 +411,15 @@ namespace CaEthernet
             {
                 if (packet?.Ethernet?.IpV4?.Udp?.DestinationPort == 34964)
                 {
-                    Console.WriteLine("incoming udp packet at 8894");
+                    Console.WriteLine("");
                     try
                     {
                         var rcppacket = (RpcHeader) packet.Ethernet.IpV4.Udp.Payload.ToArray().ByteArrayToHex();
                         var x = rcppacket.getActivityUUID();
                         if (x.EndsWith(BuilderClass.myuuid_suffix))
                         {
-                            Console.WriteLine("packet with matching activity id :-)");
-                            Console.WriteLine("packet type" + rcppacket.getPacketType());
+                            Console.WriteLine("packet length: " + packet.Length);
+                            Console.WriteLine("Status: " + rcppacket.getStatusText());
                         }
                     }
                     catch (Exception ex)

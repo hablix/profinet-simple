@@ -260,8 +260,9 @@ namespace CaEthernet
         public static string iod_ar_initiatorobject_uuid = "dea00000-6c97-11d1-8271-123456789012";
 
 
-        //public static string rpc_activity_uuid= "10000000-0000-0000-1000-123456789012";
-        public static string rpc_activity_uuid { get { var r = new Random(); return "10000000-0000-0000-1000-12345678" + r.Next(1000, 9900); } }
+        public static string rpc_activity_uuid= "10000000-0000-0000-1000-123456789012";
+        // random id führt zu nca_unk_if
+        //public static string rpc_activity_uuid { get { var r = new Random(); return "10000000-0000-0000-1000-12345678" + r.Next(1000, 9900); } }
 
         public static string rpc_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
         public static string rpc_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
@@ -270,9 +271,12 @@ namespace CaEthernet
 
         public static string myuuid_suffix = "123456789012";
 
-        public static string ar_sessionkey = "4445";
+        // fkt
+        public static string ar_sessionkey = "4444";
 
+        // aufaddieren: seq nicht ok!!
         public static int seqnr = 0;
+        // rpc aufaddieren ist ok
         public static int rpc_seqnr = 0;
 
 
@@ -342,7 +346,7 @@ namespace CaEthernet
                         $"(00 00 00 00 - 00 00 00 00)" // padding
                         ).HexShort(),
             }.Build();
-            seqnr += 1;
+            //seqnr += 1;
             return x;
         }
 

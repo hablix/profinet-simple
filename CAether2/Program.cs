@@ -196,6 +196,10 @@ namespace CaEthernet
             Console.WriteLine("      uuid: " + uuid);
             Console.WriteLine("        ip: " + ip);
 
+            BuilderClass.seqnr = 0;
+            BuilderClass.rpc_seqnr = 0;
+
+
             Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter));
             Recive(30, UDPDefaultHandler);
 
@@ -284,16 +288,16 @@ namespace CaEthernet
         private static byte[] ImplicitReadReq(string objectuuid, string filter)
         {
             // vaiireren von: io_device interface uuid;  und die variablen // "00 09", "00 01", "00 00", "00 01"
-            var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, filter);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 05");
+            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_null_uuid, BuilderClass.iod_ar_null_uuid, filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 05");
             return y.HexToByteArray();
         }
 
         private static byte[] ConnectRequest(string objectuuid, string initiator_mac)
         {
             initiator_mac = initiator_mac.HexShort();
-            var x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, initiator_mac, BuilderClass.myinitiatorid);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
+            var x = BuilderClass.BuildArBlockReq(BuilderClass.iod_ar_custom_uuid, initiator_mac, BuilderClass.iod_ar_initiatorobject_uuid);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_ControllerInterface, BuilderClass.rpc_activity_uuid, x, "00 00");
             return y.HexToByteArray();
         }
 
@@ -301,8 +305,8 @@ namespace CaEthernet
         {
             // TODO
             // vaiireren von: io_device interface uuid;  und die variablen
-            var x = BuilderClass.BuildIODHeader(BuilderClass.myarid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 02");
+            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_targetar_custom_uuid, BuilderClass.index_im0filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 02");
             return y.HexToByteArray();
         }
 
@@ -310,18 +314,18 @@ namespace CaEthernet
         {
             // TODO
             // vaiireren von: io_device interface uuid;  und die variablen
-            var x = BuilderClass.BuildIODHeader(BuilderClass.myinitiatorid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x, "00 02");
+            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_targetar_custom_uuid, BuilderClass.index_im0filter);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 02");
             return y.HexToByteArray();
         }
 
         private static byte[] ConnectionReleaseReq(string objectuuid)
         {
-            var x = BuilderClass.BuildIodReleaseBlockReq(BuilderClass.myarid);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 01");
+            var x = BuilderClass.BuildIodReleaseBlockReq(BuilderClass.iod_ar_custom_uuid);
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_ControllerInterface, BuilderClass.rpc_activity_uuid, x, "00 01");
             return y.HexToByteArray();
         }
-    
+
 
         private static void Get(string mac)
         {
@@ -369,7 +373,7 @@ namespace CaEthernet
             //                                                             PacketDeviceOpenAttributes.None, // promiscuous mode
             //                                                             1000)) // read timeout
             {
-                communicator.SendPacket(BuildEthernetPacket( macDest, content));
+                communicator.SendPacket(BuildEthernetPacket(macDest, content));
             }
         }
 
@@ -407,14 +411,15 @@ namespace CaEthernet
 
         static void UDPDefaultHandler(Packet packet)
         {
-            if (packet?.Ethernet?.IpV4?.Destination.ToString() == _ipSource1)
+            try
             {
-                if (packet?.Ethernet?.IpV4?.Udp?.DestinationPort == 34964)
+                if (packet?.Ethernet?.IpV4?.Destination.ToString() == _ipSource1)
                 {
-                    Console.WriteLine("");
-                    try
+                    if (packet?.Ethernet?.IpV4?.Udp?.DestinationPort == 34964)
                     {
-                        var rcppacket = (RpcHeader) packet.Ethernet.IpV4.Udp.Payload.ToArray().ByteArrayToHex();
+                        Console.WriteLine("");
+
+                        var rcppacket = (RpcHeader)packet.Ethernet.IpV4.Udp.Payload.ToArray().ByteArrayToHex();
                         var x = rcppacket.getActivityUUID();
                         if (x.EndsWith(BuilderClass.myuuid_suffix))
                         {
@@ -422,10 +427,11 @@ namespace CaEthernet
                             Console.WriteLine("Status: " + rcppacket.getStatusText());
                         }
                     }
-                    catch (Exception ex)
-                    { Console.WriteLine(ex.Message); }
+
                 }
             }
+            catch (Exception ex)
+            { Console.WriteLine(ex.Message); }
         }
 
         static void DefaultPacketHandler(Packet packet)
@@ -458,7 +464,7 @@ namespace CaEthernet
         }
 
         static void IdentificationResponseHandler(Packet packet)
-       {
+        {
             if (packet.Ethernet.Destination.Equals(new MacAddress(_macSource1)))
             {
                 string macsource = packet.Ethernet.Source.ToString();
@@ -705,7 +711,7 @@ namespace CaEthernet
 
         public static string HexShort(this string hex)
         {
-            return hex.Replace(" ", "").Replace("-","").Replace("(", "").Replace(")","").Replace("x","0").Replace(":", "");
+            return hex.Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").Replace("x", "0").Replace(":", "");
         }
 
 

@@ -14,9 +14,9 @@ namespace CaEthernet
         public string header;
         public string body;
 
-        public const int lengthsize = 2*2;
-        public const int lengthindex = 74*2;
-        public const int headersize = 80*2;
+        public const int lengthsize = 2 * 2;
+        public const int lengthindex = 74 * 2;
+        public const int headersize = 80 * 2;
 
         public string Build()
         {
@@ -40,7 +40,7 @@ namespace CaEthernet
             var bodylength = RpcHeader.GetBodyLength(hex, hex.Length);
             return new RpcHeader()
             {
-                header = hex.Substring(0,headersize),
+                header = hex.Substring(0, headersize),
                 body = hex.Substring(headersize, bodylength),
             };
         }
@@ -119,7 +119,7 @@ namespace CaEthernet
 
         public string getActivityUUID()
         {
-            return header.Substring(40*2, 16*2);
+            return header.Substring(40 * 2, 16 * 2);
         }
     }
 
@@ -128,15 +128,15 @@ namespace CaEthernet
         public string header;
         public string body;
 
-        public const int lengthsize = 4*2;
-        public const int lengthindex = 4*2;
-        public const int headersize = 20*2;
+        public const int lengthsize = 4 * 2;
+        public const int lengthindex = 4 * 2;
+        public const int headersize = 20 * 2;
 
         public string Build()
         {
             var all = header + body;
             all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
-            all = all.Remove(16 * 2, lengthsize).Insert(16*2, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Remove(16 * 2, lengthsize).Insert(16 * 2, body.HexGetNrOfBytes().IntToHex(lengthsize));
             return all;
         }
 
@@ -166,7 +166,7 @@ namespace CaEthernet
         public string Build()
         {
             var all = header;
-            all = all.Remove(headersizeindex, headersizeindexsize).Insert(headersizeindex, ((headersize - headersizeindex - headersizeindexsize)/2).IntToHex(headersizeindexsize));
+            all = all.Remove(headersizeindex, headersizeindexsize).Insert(headersizeindex, ((headersize - headersizeindex - headersizeindexsize) / 2).IntToHex(headersizeindexsize));
             return all;
         }
     }
@@ -208,7 +208,7 @@ namespace CaEthernet
 
     public class ArBlockRequest : IodStandardBase
     {
-        public const int headersize_c = 58 * 2 + 4*2; // + cminitiatorStationname octetstrin 1-240 byte
+        public const int headersize_c = 58 * 2 + 4 * 2; // + cminitiatorStationname octetstrin 1-240 byte
 
         public override int headersize => headersize_c;
 
@@ -241,18 +241,42 @@ namespace CaEthernet
         public const string index_im4 = "aff4";
 
         //static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
-        public static string myactivityuuid = "dea00001-6c97-11d1-8271-123456789012";
+        //public static string myactivityuuid = "dea00001-6c97-11d1-8271-123456789012";
+
+
+        //public static string mynulluuid = "00000000-0000-0000-0000-000000000000";
+
+        //public static string myarid = "dea00001-6c97-11d1-8271-123456789012";
+        //public static string myinitiatorid = "dea00000-6c97-11d1-8271-123456789012";
+
+        //public static string UUID_IO_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
+        //public static string UUID_IO_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
+        //public static string UUID_IO_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
+        //public static string UUID_IO_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
+
+        public static string iod_ar_null_uuid = "00000000-0000-0000-0000-000000000000";
+        public static string iod_ar_custom_uuid = "10000000-0000-0000-2000-123456789012";
+        public static string iod_targetar_custom_uuid = "10000000-0000-0000-2000-123456789012";
+        public static string iod_ar_initiatorobject_uuid = "dea00000-6c97-11d1-8271-123456789012";
+
+
+        //public static string rpc_activity_uuid= "10000000-0000-0000-1000-123456789012";
+        public static string rpc_activity_uuid { get { var r = new Random(); return "10000000-0000-0000-1000-12345678" + r.Next(1000, 9900); } }
+
+        public static string rpc_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
+        public static string rpc_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
+        public static string rpc_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
+        public static string rpc_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
+
         public static string myuuid_suffix = "123456789012";
 
-        public static string mynulluuid = "00000000-0000-0000-0000-000000000000";
+        public static string ar_sessionkey = "4445";
 
-        public static string myarid = "dea00001-6c97-11d1-8271-123456789012";
-        public static string myinitiatorid = "dea00000-6c97-11d1-8271-123456789012";
+        public static int seqnr = 0;
+        public static int rpc_seqnr = 0;
 
-        public static string UUID_IO_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
-        public static string UUID_IO_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
-        public static string UUID_IO_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
-        public static string UUID_IO_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
+
+
 
 
         public static string BuildRpcNrdDataReq(string objectid, string interfaceid, string activityid, string NrdDataReqRespBody, string operationr2)
@@ -270,13 +294,13 @@ namespace CaEthernet
                 $"{activityid} " +
                 $"(00 00 00 00)" + // server boot time
                 $"(00 00 00 01) " + // interface version
-                $"(00 00 00 01) " + // sequence nr
+                $"{rpc_seqnr.IntToHex(4 * 2)} " + // sequence nr
                 $"{operationr2}" + // operation nr // 0 = connect; 2 = read; 5 = implicit read => arid = 0
                 $"ffff" + // interface hint
                 $"ffff" + // hint
                 $"(xx xx) " + // length
                 $"(00 00)" + // fragment nr
-                $" 00 01"
+                $" 00 00" // auth // serial low
                 ).HexShort(),
                 body = new NrdDataReqResp()
                 {
@@ -291,17 +315,18 @@ namespace CaEthernet
                     body = NrdDataReqRespBody
                 }.Build()
             };
+            rpc_seqnr += 1;
             return pack.Build();
         }
 
-        public static string BuildIODHeader(string arid, string targetarid, string index, string blocktype = "0009", string seqnr = "00 01", string slot2 = "00 00", string subslot2 = "00 00")
+        public static string BuildIODHeader(string arid, string targetarid, string index, string blocktype = "0009", /*string seqnr = "00 01",*/ string slot2 = "00 00", string subslot2 = "00 01")
         {
             var x = new IodHeader()
             {
                 header = (
                         $"{blocktype}" + // block header
                         $"(xx xx) 01 00" + // block header length + version hig + low
-                        $"{seqnr}" + // seq nr
+                        $"{seqnr.IntToHex(2 * 2)}" + // seq nr
                         $"{arid}" + // aruuid frei bei implit read
                         $"(00 00 00 00)" + // api
                         $"{slot2}" + // slot
@@ -317,6 +342,7 @@ namespace CaEthernet
                         $"(00 00 00 00 - 00 00 00 00)" // padding
                         ).HexShort(),
             }.Build();
+            seqnr += 1;
             return x;
         }
 
@@ -328,10 +354,10 @@ namespace CaEthernet
                         $"{blocktype} (xx xx) 01 00" +
                         $"{artype}" +
                         $"{arid}" +
-                        $"(00 00)" + // session key
+                        $"{ar_sessionkey}" + // session key
                         $"{mac6}" +
                         $"{initiatorojbectid}" +
-                        $"00 00 01 91" +
+                        $"00 00 01 31" +
                         // 3. bit von 0.. 31 muss 1 sein.  also auch 
                         // 0                    1                   2                   3
                         //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -354,15 +380,15 @@ namespace CaEthernet
         }
 
 
-        public static string BuildIodReleaseBlockReq(string arid, string blocktype = "0114", string sessionkey = "0000")
+        public static string BuildIodReleaseBlockReq(string arid, string blocktype = "0114" /*string sessionkey = "0000"*/)
         {
-            var x = new ArBlockRequest()
+            var x = new IodReleaseBlock()
             {
                 header = (
                         $"{blocktype} (xx xx) 01 00" +
                         $"00 00" + // padding
                         $"{arid}" +
-                        $"{sessionkey}" +
+                        $"{ar_sessionkey}" +
                         $"00 00" + // padding
                         $"(00 04)" + // control cmd
                         $"(00 00)" // control block prop

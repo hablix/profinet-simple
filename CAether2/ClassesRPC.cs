@@ -242,6 +242,8 @@ namespace CaEthernet
         public const string index_im3 = "aff3";
         public const string index_im4 = "aff4";
 
+        public static Random r = new Random();
+
         //static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
         //public static string myactivityuuid = "dea00001-6c97-11d1-8271-123456789012";
 
@@ -264,7 +266,7 @@ namespace CaEthernet
 
         public static string rpc_activity_uuid= "10000000-0000-0000-1000-123456789012";
         // random id führt zu nca_unk_if
-        //public static string rpc_activity_uuid { get { var r = new Random(); return "10000000-0000-0000-1000-12345678" + r.Next(1000, 9900); } }
+        //public static string rpc_activity_uuid {  get{return "10000000-0000-0000-1000-12" + r.Next(1, 90000).IntToHex(8) + "12"; } }
 
         public static string rpc_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
         public static string rpc_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";

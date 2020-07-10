@@ -296,6 +296,7 @@ namespace CaEthernet
         private static byte[] ConnectRequest(string objectuuid, string initiator_mac)
         {
             initiator_mac = initiator_mac.HexShort();
+            //var activity_UUID = BuilderClass.rpc_activity_uuid;
             var x = BuilderClass.BuildArBlockReq(BuilderClass.iod_ar_custom_uuid, initiator_mac, BuilderClass.iod_ar_initiatorobject_uuid);
             var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_ControllerInterface, BuilderClass.rpc_activity_uuid, x, "00 00");
             return y.HexToByteArray();

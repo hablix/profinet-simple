@@ -39,6 +39,8 @@ namespace CaEthernet
         static PacketDevice selectedDevice;
 
         static PacketCommunicator communicator;
+        static PacketCommunicator communicatorReciver;
+
 
 
         static void Main(string[] args)
@@ -83,6 +85,13 @@ namespace CaEthernet
                                             PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
                                             1000); // read timeout
 
+            communicatorReciver = selectedDevice.Open(100, // name of the device
+                                            PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+                                            1000); // read timeout
+
+            Thread t = new Thread(() => { communicatorReciver.ReceivePackets(5000, UDPDefaultHandler); });
+            t.Start();
+
 
         begin:
 
@@ -90,6 +99,7 @@ namespace CaEthernet
                 "\n 'i' for identification request " +
                 "\n 's' for set name to listed mac " +
                 "\n 'z' for set name to custom mac " +
+                "\n 'set ip' set ip for listed device" +
                 "\n 'u' rpc " +
                 "\n 'a' rpc to all" +
                 "\n 'x' to exit");
@@ -120,12 +130,28 @@ namespace CaEthernet
                 try
                 {
                     PrintAllResponses();
-                    Console.WriteLine("type device to respond to: ");
+                    Console.WriteLine("select device, which name should be changed: ");
                     int index = 0;
                     do
                         Console.WriteLine("type in mac adress index from 0 to " + (_collectedResponses.Count - 1));
                     while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
                     Sationsname(_collectedResponses[index].mac);
+                }
+                catch (Exception ex)
+                { Console.WriteLine(ex.Message); }
+            }
+
+            if (val == "set ip")
+            {
+                try
+                {
+                    PrintAllResponses();
+                    Console.WriteLine("select device, which ip should be changed: ");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in mac adress index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    Sationsip(_collectedResponses[index].mac);
                 }
                 catch (Exception ex)
                 { Console.WriteLine(ex.Message); }
@@ -173,7 +199,29 @@ namespace CaEthernet
             Console.WriteLine("neuer Stationsname: ");
             var value = Console.ReadLine();
             SendSetRequest(mac, "0202", value.StringToHex());
-            Recive(10, DefaultPacketHandler);
+            Recive(30, DefaultPacketHandler);
+
+        }
+
+        private static void Sationsip(string mac)
+        {
+            Console.WriteLine("neue ip: ");
+            var value0 = Console.ReadLine();
+            IpV4Address ip4 = new IpV4Address(value0);
+            var i = ip4.ToValue().ToString("X");
+            var g = ip4.ToValue().ToString("X");
+            Console.WriteLine("neue gateway: " + value0);
+
+            Console.WriteLine("neue subnetz: ");
+            var value1 = Console.ReadLine();
+            IpV4Address ipsubnetz = new IpV4Address(value1);
+            var s = ipsubnetz.ToValue().ToString("X");
+
+            //AC1001D7FFFFF000F000AC10
+            //000000000000000000000000
+            //SendSetRequest(mac, "0102", "AC1001D7FFFFF000F000AC10".HexShort());
+            SendSetRequest(mac, "0102",i + s +g);
+            Recive(30, DefaultPacketHandler);
 
         }
 
@@ -201,28 +249,28 @@ namespace CaEthernet
 
 
             Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00"));
-            Recive(30, UDPDefaultHandler);
+            //Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(300);
 
             Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
-            Recive(30, UDPDefaultHandler);
+            //Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(400);
 
             Send(_collectedResponses[index].mac, ip, ConnectRequest(uuid, _macSource1));
-            Recive(30, UDPDefaultHandler);
+            //Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(400);
 
             Send(_collectedResponses[index].mac, ip, ReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
-            Recive(30, UDPDefaultHandler);
+            //Recive(30, UDPDefaultHandler);
 
 
             Thread.Sleep(400);
 
             Send(_collectedResponses[index].mac, ip, ConnectionReleaseReq(uuid));
-            Recive(30, UDPDefaultHandler);
+            //Recive(30, UDPDefaultHandler);
 
         }
 
@@ -356,7 +404,10 @@ namespace CaEthernet
             var dcpdata = new DcpData(option, contentHex);
             var dcppacket = new DcpPacket();
             dcppacket.MakeSetRequest(dcpdata.Build());
-            Send(mac, dcppacket.Build());
+            var hex = dcppacket.Build();
+            //if (option == "0102")
+            //    hex = dcppacket.Build2();
+            Send(mac, hex);
         }
 
         static void SendGetRequest(string mac, string option, string contentHex)
@@ -427,6 +478,27 @@ namespace CaEthernet
                             Console.WriteLine("packet length: " + packet.Length);
                             Console.WriteLine("Status: " + rcppacket.getStatusText());
                         }
+
+                        var nrd = (NrdDataReqResp) rcppacket.body/*.Substring(4*2)*/;
+                        var i = 0;
+                        var count_pre = nrd.body.Length;
+                        while (i < count_pre)
+                        {
+                            var iod = (IodHeaderRead)nrd.body.Substring(i);
+                            i = i + iod.header.Length + iod.body.Length;
+
+                            try
+                            {
+                                var ii = 14*2;
+                                while (ii < iod.body.Length)
+                                {
+                                    var subopt = iod.body.HexGetNextBytes(ref ii, 14);
+                                    Console.WriteLine("option and subotions " + subopt.Substring(0,2*2));
+                                }
+                            }
+                            catch { }
+
+                            }
                     }
 
                 }
@@ -447,15 +519,20 @@ namespace CaEthernet
                     var dcppacket = new DcpPacket(content);
                     if (dcppacket._xid.Equals(TRANSACT_ID))
                     {
+                        Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + " matching xid to us, length:" + packet.Length);
+                        if (dcppacket._serviceType.EndsWith("01"))
+                            HighlightConsole("dcp - success");
+                        else
+                            Console.WriteLine(dcppacket._serviceType);
                         // Matching ID and matching dest.
                         Console.WriteLine(packet.Timestamp.ToString("yyyy-MM-dd hh:mm:ss.fff") + " matching xid to us, length:" + packet.Length);
-                        Console.WriteLine(" Adress: " + macsource);
                         foreach (var dcpdata in dcppacket.GetDcpDataPackages())
                         {
-                            Console.WriteLine(dcpdata.ToString());
+                            if (dcpdata._statusHex == "00")
+                                HighlightConsole("block - ok");
+                            else
+                                Console.WriteLine(dcpdata._statusHex);
                         }
-                        Console.WriteLine("raw: " + Encoding.UTF8.GetString(packet.Buffer));
-                        Console.WriteLine("");
 
                     }
                 }
@@ -513,6 +590,13 @@ namespace CaEthernet
             }
         }
 
+        private static void HighlightConsole(string input)
+        {
+            HighlightConsole(true);
+            Console.WriteLine(input);
+            HighlightConsole(false);
+        }
+
         static void PrintAllResponses()
         {
             Console.WriteLine("");
@@ -530,13 +614,18 @@ namespace CaEthernet
                 foreach (var dcpdata in _collectedResponses[i].dcpPacket.GetDcpDataPackages())
                 {
                     if (dcpdata.ToGuid() != Guid.Empty)
-                        Console.WriteLine("           guid " + dcpdata.ToGuid());
-
-                    if (dcpdata.ip() != "")
                     {
-                        Console.WriteLine("             ip " + dcpdata.ip());
-                        Console.WriteLine("         subnet " + dcpdata.subnet());
+                        Console.WriteLine("        guid    " + dcpdata.ToGuid());
+                    }
+                    else if (dcpdata.ip() != "")
+                    {
+                        Console.WriteLine("        ip      " + dcpdata.ip());
+                        Console.WriteLine("        subnet  " + dcpdata.subnet());
                         Console.WriteLine("        gateway " + dcpdata.gateway());
+                    }
+                    else if (dcpdata.geraeterolle() != "")
+                    {
+                        Console.WriteLine("                " + dcpdata.geraeterolle());
                     }
                     else
                         Console.WriteLine(dcpdata.ToString());
@@ -669,7 +758,7 @@ namespace CaEthernet
         {
             numberOfBytes *= 2;
             var x = hex.Substring(counter, numberOfBytes);
-            counter += numberOfBytes;
+            counter = counter + numberOfBytes;
             return x;
         }
 

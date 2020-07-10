@@ -105,6 +105,30 @@ namespace CaEthernet
             else
                 return "";
         }
+
+        public string geraeterolle()
+        {
+            if (_optionHex == "0204")
+            {
+                try
+                {
+                    switch (_contentHex.Substring(5, 1).HexToInt())
+                    {
+                        case 0:
+                            return "IO-Device";
+                        case 1:
+                            return "IO-Conroler";
+                        case 2:
+                            return "IO-Multidevice";
+                        case 3:
+                            return "IO-supervisor";
+                    }
+                }
+                catch
+                { }
+            }
+            return "";
+        }
     }
 
     public class DcpPacket

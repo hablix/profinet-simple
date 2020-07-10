@@ -37,11 +37,11 @@ namespace CaEthernet
 
         public static explicit operator RpcHeader(string hex)
         {
-            var bodylength = RpcHeader.GetBodyLength(hex, hex.Length);
+            //var bodylength = RpcHeader.GetBodyLength(hex, hex.Length);
             return new RpcHeader()
             {
                 header = hex.Substring(0, headersize),
-                body = hex.Substring(headersize, bodylength),
+                body = hex.Substring(headersize/*, bodylength*/),
             };
         }
 
@@ -140,18 +140,12 @@ namespace CaEthernet
             return all;
         }
 
-        public static int GetBodyLength(string header)
-        {
-            return header.Substring(lengthindex, lengthsize).HexToInt();
-        }
-
         public static explicit operator NrdDataReqResp(string hex)
         {
-            var bodylength = NrdDataReqResp.GetBodyLength(hex);
             return new NrdDataReqResp()
             {
                 header = hex.Substring(0, headersize),
-                body = hex.Substring(headersize, bodylength),
+                body = hex.Substring(headersize),
             };
         }
     }

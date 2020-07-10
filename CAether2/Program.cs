@@ -200,12 +200,12 @@ namespace CaEthernet
             BuilderClass.rpc_seqnr = 0;
 
 
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter));
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00"));
             Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(300);
 
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0));
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
             Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(400);
@@ -215,7 +215,7 @@ namespace CaEthernet
 
             Thread.Sleep(400);
 
-            Send(_collectedResponses[index].mac, ip, ReadReq(uuid));
+            Send(_collectedResponses[index].mac, ip, ReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
             Recive(30, UDPDefaultHandler);
 
 
@@ -285,10 +285,10 @@ namespace CaEthernet
         //    //return pack.Build();
         //}
 
-        private static byte[] ImplicitReadReq(string objectuuid, string filter)
+        private static byte[] ImplicitReadReq(string objectuuid, string filter, string slot2, string subslot2)
         {
             // vaiireren von: io_device interface uuid;  und die variablen // "00 09", "00 01", "00 00", "00 01"
-            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_null_uuid, BuilderClass.iod_ar_null_uuid, filter);
+            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_null_uuid, BuilderClass.iod_ar_null_uuid, filter, "00 09", slot2, subslot2);
             var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 05");
             return y.HexToByteArray();
         }
@@ -301,11 +301,11 @@ namespace CaEthernet
             return y.HexToByteArray();
         }
 
-        private static byte[] ReadReq(string objectuuid)
+        private static byte[] ReadReq(string objectuuid, string index, string slot2, string subslot2)
         {
             // TODO
             // vaiireren von: io_device interface uuid;  und die variablen
-            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_targetar_custom_uuid, BuilderClass.index_im0filter);
+            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_targetar_custom_uuid, index, "00 09", slot2, subslot2);
             var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 02");
             return y.HexToByteArray();
         }
@@ -677,6 +677,11 @@ namespace CaEthernet
         public static string StringToHex(this string utf8)
         {
             return ByteArrayToHex(Encoding.UTF8.GetBytes(utf8));
+        }
+
+        public static string Replace(this string text, int begin, string replacedBy)
+        {
+            return text.Remove(begin, replacedBy.Length).Insert(begin, replacedBy);
         }
 
         // Byte Array

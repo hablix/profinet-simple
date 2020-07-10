@@ -171,13 +171,15 @@ namespace CaEthernet
         }
     }
 
-    public class IodHeader : IodStandardBase
+    public class IodHeaderRead : IodStandardBase
     {
         public string body;
 
         public const int lengthsize = 4 * 2;
         public const int lengthindex = 36 * 2;
         public const int headersize_c = 64 * 2;
+
+        public const int expectedLength = 4096;
 
         public override int headersize => headersize_c;
 
@@ -186,7 +188,7 @@ namespace CaEthernet
             var all = base.Build();
 
             all += body;
-            all = all.Remove(lengthindex, lengthsize).Insert(lengthindex, body.HexGetNrOfBytes().IntToHex(lengthsize));
+            all = all.Replace(lengthindex, expectedLength.IntToHex(lengthsize));
             return all;
         }
 
@@ -195,10 +197,10 @@ namespace CaEthernet
             return header.Substring(lengthindex, lengthsize).HexToInt();
         }
 
-        public static explicit operator IodHeader(string hex)
+        public static explicit operator IodHeaderRead(string hex)
         {
-            var bodylength = IodHeader.GetBodyLength(hex);
-            return new IodHeader()
+            var bodylength = IodHeaderRead.GetBodyLength(hex);
+            return new IodHeaderRead()
             {
                 header = hex.Substring(0, headersize_c),
                 body = hex.Substring(headersize_c, bodylength),
@@ -275,7 +277,7 @@ namespace CaEthernet
         public static string ar_sessionkey = "4444";
 
         // aufaddieren: seq nicht ok!!
-        public static int seqnr = 0;
+        public static int seqnr = 1;
         // rpc aufaddieren ist ok
         public static int rpc_seqnr = 0;
 
@@ -291,7 +293,7 @@ namespace CaEthernet
                 $"04" + // version
                 $"00 " + // 0 = request; 2 = response ; 7 = ack
                 $"20 00 " + // flags
-                $"00 00 00" + // data rep
+                $"00 00 00" + // data rep //10 00 00 fkt nicht!
                 $"00 " + // serial high
                 $"{objectid} " +
                 $"{interfaceid} " +
@@ -310,11 +312,11 @@ namespace CaEthernet
                 {
                     // auch möglich: (00 00 02 51)
                     header = (
-                    "(00 00 00 ff)" +
-                    "(xx xx xx xx) " +
-                    "(00 00 00 ff) " +
-                    "(00 00 00 00) " +
-                    "(xx xx xx xx)"
+                    "(00 00 02 51)" + // args max status
+                    "(xx xx xx xx) " + // length 
+                    "(00 00 02 51) " + // args maximum
+                    "(00 00 00 00) " + // offset
+                    "(xx xx xx xx)" // length
                     ).HexShort(),
                     body = NrdDataReqRespBody
                 }.Build()
@@ -325,7 +327,7 @@ namespace CaEthernet
 
         public static string BuildIODHeader(string arid, string targetarid, string index, string blocktype = "0009", /*string seqnr = "00 01",*/ string slot2 = "00 00", string subslot2 = "00 01")
         {
-            var x = new IodHeader()
+            var x = new IodHeaderRead()
             {
                 header = (
                         $"{blocktype}" + // block header
@@ -361,7 +363,7 @@ namespace CaEthernet
                         $"{ar_sessionkey}" + // session key
                         $"{mac6}" +
                         $"{initiatorojbectid}" +
-                        $"00 00 01 31" +
+                        $"00 00 01 31" + // 0191
                         // 3. bit von 0.. 31 muss 1 sein.  also auch 
                         // 0                    1                   2                   3
                         //  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1

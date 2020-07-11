@@ -104,8 +104,8 @@ namespace CaEthernet
                 "\n 'read 0' get I&M 0 data from listed 'IO-Device' " +
                 "\n 'read 1' get I&M 1 data from listed 'IO-Device' " +
                 "\n 'write 1' set I&M 1 data from listed 'IO-Device' " +
-                "\n 'u' rpc " +
-                "\n 'a' rpc to all" +
+                //"\n 'u' rpc " +
+                //"\n 'a' rpc to all" +
                 "\n 'x' to exit");
             var val = Console.ReadLine();
 
@@ -266,8 +266,13 @@ namespace CaEthernet
         {
             Console.WriteLine("neuer Stationsname: ");
             var value = Console.ReadLine();
-            SendSetRequest(mac, "0202", value.StringToHex());
-            Recive(30, DefaultPacketHandler);
+            var t = new Thread(() =>
+            {
+                var t = new Thread(() => { Recive(30, DefaultPacketHandler); });
+                t.Start();
+                SendSetRequest(mac, "0202", value.StringToHex());
+            });
+            t.Start();
         }
 
         private static void Sationsip(string mac)
@@ -287,8 +292,10 @@ namespace CaEthernet
             //AC1001D7FFFFF000F000AC10
             //000000000000000000000000
             //SendSetRequest(mac, "0102", "AC1001D7FFFFF000F000AC10".HexShort());
+            var t = new Thread(() => { Recive(30, DefaultPacketHandler); });
+            t.Start();
             SendSetRequest(mac, "0102",i + s +g);
-            Recive(30, DefaultPacketHandler);
+            //Recive(30, DefaultPacketHandler);
 
         }
 
@@ -582,8 +589,9 @@ namespace CaEthernet
 
         private static void ListAllDevices()
         {
+             var t = new Thread(() => { Recive(40, IdentificationResponseHandler); });
+            t.Start();
             SendIdentificationRequest();
-            Recive(30, IdentificationResponseHandler);
         }
 
 
@@ -642,17 +650,18 @@ namespace CaEthernet
         static void Recive(int number, HandlePacket packetHandler)
         {
             // Open the device
-            //using (PacketCommunicator communicator =
-            //    selectedDevice.Open(65536,                                  // portion of the packet to capture
-            //                                                                // 65536 guarantees that the whole packet will be captured on all the link layers
-            //                        PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
-            //                        1000))                                  // read timeout
+            using (PacketCommunicator communicatorX =
+                selectedDevice.Open(65536,                                  // portion of the packet to capture
+                                                                            // 65536 guarantees that the whole packet will be captured on all the link layers
+                                    PacketDeviceOpenAttributes.Promiscuous, // promiscuous mode
+                                    1000))                                  // read timeout
             {
-                Console.WriteLine("Listening: " + selectedDevice.Description);
+                Console.WriteLine("");
+                Console.WriteLine("Listening: ");
 
                 // start the capture
                 // Callback function invoked by Pcap.Net for every incoming packet
-                communicator.ReceivePackets(number, packetHandler);
+                communicatorX.ReceivePackets(number, packetHandler);
             }
         }
 
@@ -791,6 +800,8 @@ namespace CaEthernet
                 }
                 catch (Exception ex)
                 { LowlightConsole(ex.Message); }
+                Console.WriteLine("");
+
             }
         }
 
@@ -824,7 +835,8 @@ namespace CaEthernet
                         }
                     }
                 }
-                catch { }
+                catch
+                { }
                 PrintAllResponses();
             }
         }

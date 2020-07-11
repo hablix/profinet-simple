@@ -96,10 +96,14 @@ namespace CaEthernet
         begin:
 
             Console.WriteLine("\n\n Type " +
-                "\n 'i' for identification request " +
-                "\n 's' for set name to listed mac " +
-                "\n 'z' for set name to custom mac " +
-                "\n 'set ip' set ip for listed device" +
+                "\n 'i' >> to begin << and send a identification request to all decices" +
+                "\n 'set name' sets name of listed device " +
+                //"\n 'z' for set name to custom mac " +
+                "\n 'set ip' sets ip and subnet of listed device " +
+                "\n 'read filter' get filter data from listed 'IO-Device' " +
+                "\n 'read 0' get I&M 0 data from listed 'IO-Device' " +
+                "\n 'read 1' get I&M 1 data from listed 'IO-Device' " +
+                "\n 'write 1' set I&M 1 data from listed 'IO-Device' " +
                 "\n 'u' rpc " +
                 "\n 'a' rpc to all" +
                 "\n 'x' to exit");
@@ -113,19 +117,19 @@ namespace CaEthernet
                 ListAllDevices();
             }
 
-            if (val == "z")
-            {
-                Console.WriteLine("type device to respond to: ");
-                Console.WriteLine("type in mac adress in style 00:00:00:00:00:00");
-                try
-                {
-                    Sationsname(Console.ReadLine());
-                }
-                catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
-            }
+            //if (val == "z")
+            //{
+            //    Console.WriteLine("type device to respond to: ");
+            //    Console.WriteLine("type in mac adress in style 00:00:00:00:00:00");
+            //    try
+            //    {
+            //        Sationsname(Console.ReadLine());
+            //    }
+            //    catch (Exception ex)
+            //    { Console.WriteLine(ex.Message); }
+            //}
 
-            if (val == "s")
+            if (val == "set name")
             {
                 try
                 {
@@ -138,7 +142,7 @@ namespace CaEthernet
                     Sationsname(_collectedResponses[index].mac);
                 }
                 catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
+                { LowlightConsole(ex.Message); }
             }
 
             if (val == "set ip")
@@ -154,7 +158,71 @@ namespace CaEthernet
                     Sationsip(_collectedResponses[index].mac);
                 }
                 catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
+                { LowlightConsole(ex.Message); }
+            }
+
+            if (val == "read filter")
+            {
+                try
+                {
+                    PrintAllResponses();
+                    Console.WriteLine("select device, which rpc I&M 0 FILTER Data should be read ");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in device index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    RcpReadFilter(index);
+                }
+                catch (Exception ex)
+                { LowlightConsole(ex.Message); }
+            }
+
+            if (val == "read 0")
+            {
+                try
+                {
+                    PrintAllResponses();
+                    Console.WriteLine("select device, which rpc I&M 0 Data should be read ");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in device index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    RcpReadIandM0(index);
+                }
+                catch (Exception ex)
+                { LowlightConsole(ex.Message); }
+            }
+
+            if (val == "read 1")
+            {
+                try
+                {
+                    PrintAllResponses();
+                    Console.WriteLine("select device, which rpc I&M 1 Data should be read ");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in device index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    RcpReadIandM1(index);
+                }
+                catch (Exception ex)
+                { LowlightConsole(ex.Message); }
+            }
+
+            if (val == "write 1")
+            {
+                try
+                {
+                    PrintAllResponses();
+                    Console.WriteLine("select device, which rpc I&M 1 Data should be written to");
+                    int index = 0;
+                    do
+                        Console.WriteLine("type in device index from 0 to " + (_collectedResponses.Count - 1));
+                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
+                    RcpWriteIandM1(index);
+                }
+                catch (Exception ex)
+                { LowlightConsole(ex.Message); }
             }
 
 
@@ -171,7 +239,7 @@ namespace CaEthernet
                     Rcp1(index);
                 }
                 catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
+                { LowlightConsole(ex.Message); }
             }
 
             if (val == "a")
@@ -187,7 +255,7 @@ namespace CaEthernet
                     Console.WriteLine("finished.");
                 }
                 catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
+                { LowlightConsole(ex.Message); }
             }
 
 
@@ -200,7 +268,6 @@ namespace CaEthernet
             var value = Console.ReadLine();
             SendSetRequest(mac, "0202", value.StringToHex());
             Recive(30, DefaultPacketHandler);
-
         }
 
         private static void Sationsip(string mac)
@@ -225,6 +292,125 @@ namespace CaEthernet
 
         }
 
+        private static void RcpReadFilter(int index)
+        {
+            string ip = "";
+            string uuid = "";
+            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
+            {
+                if (dcpdata.ip() != "")
+                {
+                    ip = dcpdata.ip();
+                }
+                if (dcpdata.ToGuid() != Guid.Empty)
+                {
+                    uuid = dcpdata.ToGuid().ToString();
+                }
+            }
+            Console.WriteLine("connecting: " + _collectedResponses[index].mac);
+
+            BuilderClass.seqnr = 0;
+            BuilderClass.rpc_seqnr = 0;
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00", BuilderClass.rpc_activity_uuid_imf));
+        }
+
+        private static void RcpReadIandM0(int index)
+        {
+            string ip = "";
+            string uuid = "";
+            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
+            {
+                if (dcpdata.ip() != "")
+                {
+                    ip = dcpdata.ip();
+                }
+                if (dcpdata.ToGuid() != Guid.Empty)
+                {
+                    uuid = dcpdata.ToGuid().ToString();
+                }
+            }
+            Console.WriteLine("slot: ");
+            var slot2 = Console.ReadLine().PadLeft(4, '0');
+            Console.WriteLine("sub slot: ");
+            var subslot2 = Console.ReadLine().PadLeft(4, '0');
+
+            BuilderClass.seqnr = 0;
+            BuilderClass.rpc_seqnr = 0;
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, slot2, subslot2, BuilderClass.rpc_activity_uuid3));
+        }
+
+        private static void RcpReadIandM1(int index)
+        {
+            string ip = "";
+            string uuid = "";
+            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
+            {
+                if (dcpdata.ip() != "")
+                {
+                    ip = dcpdata.ip();
+                }
+                if (dcpdata.ToGuid() != Guid.Empty)
+                {
+                    uuid = dcpdata.ToGuid().ToString();
+                }
+            }
+            Console.WriteLine("slot: 0");
+            Console.WriteLine("sub slot: 1");
+            Console.ReadLine();
+
+            BuilderClass.seqnr = 0;
+            BuilderClass.rpc_seqnr = 0;
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im1, "00 00", "00 01", BuilderClass.rpc_activity_uuid_im1r));
+        }
+
+
+
+        private static void RcpWriteIandM1(int index)
+        {
+            string ip = "";
+            string uuid = "";
+            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
+            {
+                if (dcpdata.ip() != "")
+                {
+                    ip = dcpdata.ip();
+                }
+                if (dcpdata.ToGuid() != Guid.Empty)
+                {
+                    uuid = dcpdata.ToGuid().ToString();
+                }
+            }
+            Console.WriteLine("slot: 0");
+            Console.WriteLine("sub slot: 1");
+            Console.WriteLine("IM_Tag_function: ");
+            var content = Console.ReadLine();
+
+            BuilderClass.seqnr = 0;
+            BuilderClass.rpc_seqnr = 0;
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00", BuilderClass.rpc_activity_uuid));
+
+            Thread.Sleep(1);
+
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im1, "00 00", "00 01", BuilderClass.rpc_activity_uuid));
+
+            Thread.Sleep(1);
+
+            Send(_collectedResponses[index].mac, ip, ConnectRequest(uuid, _macSource1));
+
+            Thread.Sleep(400);
+
+            Send(_collectedResponses[index].mac, ip, WriteReq(uuid, content));
+
+            Thread.Sleep(400);
+
+            Send(_collectedResponses[index].mac, ip, ConnectionReleaseReq(uuid));
+        }
+
+
         private static void Rcp1(int index)
         {
             string ip = "";
@@ -248,12 +434,12 @@ namespace CaEthernet
             BuilderClass.rpc_seqnr = 0;
 
 
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00"));
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00", BuilderClass.rpc_activity_uuid));
             //Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(300);
 
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
+            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01", BuilderClass.rpc_activity_uuid3));
             //Recive(30, UDPDefaultHandler);
 
             Thread.Sleep(400);
@@ -333,11 +519,11 @@ namespace CaEthernet
         //    //return pack.Build();
         //}
 
-        private static byte[] ImplicitReadReq(string objectuuid, string filter, string slot2, string subslot2)
+        private static byte[] ImplicitReadReq(string objectuuid, string filter, string slot2, string subslot2, string rpc_activity_uuid)
         {
             // vaiireren von: io_device interface uuid;  und die variablen // "00 09", "00 01", "00 00", "00 01"
             var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_null_uuid, BuilderClass.iod_ar_null_uuid, filter, "00 09", slot2, subslot2);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 05");
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, rpc_activity_uuid, x, "00 05");
             return y.HexToByteArray();
         }
 
@@ -359,12 +545,21 @@ namespace CaEthernet
             return y.HexToByteArray();
         }
 
-        private static byte[] WriteReq(string objectuuid)
+        private static byte[] WriteReq(string objectuuid, string content)
         {
-            // TODO
-            // vaiireren von: io_device interface uuid;  und die variablen
-            var x = BuilderClass.BuildIODHeader(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_targetar_custom_uuid, BuilderClass.index_im0filter);
-            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuid, x, "00 02");
+
+            var im0 = new Im1Block()
+            {
+                header = "0021 xxxx 01 00".HexShort(),
+                body = content.PadRight(32, ' ').StringToHex() + "".PadLeft(22, ' ').StringToHex()
+            };
+            var x2 = im0.Build();
+            //var padding = "".PadLeft(24*2, '0');
+            // pad or not
+            //x2 = padding + x2;
+            var x = BuilderClass.BuildIODHeaderContent(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_ar_null_uuid, BuilderClass.index_im1, "00 08", "00 00", "00 01", x2 );
+           
+            var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuidim1w, x,"00 03");
             return y.HexToByteArray();
         }
 
@@ -473,38 +668,96 @@ namespace CaEthernet
 
                         var rcppacket = (RpcHeader)packet.Ethernet.IpV4.Udp.Payload.ToArray().ByteArrayToHex();
                         var x = rcppacket.getActivityUUID();
-                        if (x.EndsWith(BuilderClass.myuuid_suffix))
+
+                        if (x.EndsWith(BuilderClass.myuuid_suffiximf))
                         {
                             Console.WriteLine("packet length: " + packet.Length);
                             Console.WriteLine("Status: " + rcppacket.getStatusText());
+                            Console.WriteLine("I&M 0 FILTER data:");
+
+                            var nrd = (NrdDataReqResp)rcppacket.body/*.Substring(4*2)*/;
+                            var i = 0;
+                            var count_pre = nrd.body.Length;
+                            while (i < count_pre)
+                            {
+                                var iod = (IodHeaderRead)nrd.body.Substring(i);
+                                i = i + iod.header.Length + iod.body.Length;
+
+                                try
+                                {
+                                    var ii = 14 * 2;
+                                    while (ii < iod.body.Length)
+                                    {
+                                        var subopt = iod.body.HexGetNextBytes(ref ii, 14);
+                                        Console.WriteLine("slot: " + subopt.Substring(0, 2 * 2) + " and subslot: " + subopt.Substring(8*2, 2 * 2));
+                                    }
+                                }
+                                catch { }
+
+                            }
+                        }
+                        if (x.EndsWith(BuilderClass.myuuid_suffix3))
+                        {
+                            Console.WriteLine("packet length: " + packet.Length);
+                            Console.WriteLine("Status: " + rcppacket.getStatusText());
+                            Console.WriteLine("I&M 0 DATA:");
+
+
+                            var nrd = (NrdDataReqResp)rcppacket.body/*.Substring(4*2)*/;
+                            var i = 0;
+                            var count_pre = nrd.body.Length;
+                            while (i < count_pre)
+                            {
+                                var iod = (IodHeaderReadResp)nrd.body.Substring(i);
+                                i = i + iod.header.Length + iod.body.Length;
+
+                                try
+                                {
+                                    Console.WriteLine("vendor: " + iod.body.Substring(6*2 , 2 * 2));
+                                    Console.WriteLine("order: " + iod.body.Substring(8 * 2, 20 * 2).HexToString());
+                                    Console.WriteLine("serialnr: " + iod.body.Substring(28 * 2, 16 * 2).HexToString());
+                                    Console.WriteLine("rest: " + iod.body.Substring(44 * 2));
+                                }
+                                catch{ }
+                            }
                         }
 
-                        var nrd = (NrdDataReqResp) rcppacket.body/*.Substring(4*2)*/;
-                        var i = 0;
-                        var count_pre = nrd.body.Length;
-                        while (i < count_pre)
+                        if (x.EndsWith(BuilderClass.myuuid_suffixim1w))
                         {
-                            var iod = (IodHeaderRead)nrd.body.Substring(i);
-                            i = i + iod.header.Length + iod.body.Length;
+                            Console.WriteLine("packet length: " + packet.Length);
+                            Console.WriteLine("Status: " + rcppacket.getStatusText());
+                            Console.WriteLine("I&M 1 response");
+                        }
 
-                            try
+                        if (x.EndsWith(BuilderClass.myuuid_suffixim1r))
+                        {
+                            Console.WriteLine("packet length: " + packet.Length);
+                            Console.WriteLine("Status: " + rcppacket.getStatusText());
+                            Console.WriteLine("I&M 1 DATA:");
+
+
+                            var nrd = (NrdDataReqResp)rcppacket.body/*.Substring(4*2)*/;
+                            var i = 0;
+                            var count_pre = nrd.body.Length;
+                            while (i < count_pre)
                             {
-                                var ii = 14*2;
-                                while (ii < iod.body.Length)
-                                {
-                                    var subopt = iod.body.HexGetNextBytes(ref ii, 14);
-                                    Console.WriteLine("option and subotions " + subopt.Substring(0,2*2));
-                                }
-                            }
-                            catch { }
+                                var iod = (IodHeaderReadResp)nrd.body.Substring(i);
+                                i = i + iod.header.Length + iod.body.Length;
 
+                                try
+                                {
+                                    Console.WriteLine("function: " + iod.body.Substring(6*2, 32*2).HexToString());
+                                    Console.WriteLine("tag: " + iod.body.Substring(38*2, 22 * 2).HexToString());
+                                }
+                                catch { }
                             }
+                        }
                     }
 
                 }
             }
             catch (Exception ex)
-            { Console.WriteLine(ex.Message); }
+            { LowlightConsole(ex.Message); }
         }
 
         static void DefaultPacketHandler(Packet packet)
@@ -537,7 +790,7 @@ namespace CaEthernet
                     }
                 }
                 catch (Exception ex)
-                { Console.WriteLine(ex.Message); }
+                { LowlightConsole(ex.Message); }
             }
         }
 
@@ -576,12 +829,20 @@ namespace CaEthernet
             }
         }
 
-        private static void HighlightConsole(bool onoff)
+        private static void HighlightConsole(bool onoff, int color = 0)
         {
             if (onoff)
             {
-                Console.BackgroundColor = ConsoleColor.Yellow;
-                Console.ForegroundColor = ConsoleColor.Black;
+                if (color == 0)
+                {
+                    Console.BackgroundColor = ConsoleColor.Yellow;
+                    Console.ForegroundColor = ConsoleColor.Black;
+                }
+                else
+                {
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                }
             }
             else
             {
@@ -593,6 +854,13 @@ namespace CaEthernet
         private static void HighlightConsole(string input)
         {
             HighlightConsole(true);
+            Console.WriteLine(input);
+            HighlightConsole(false);
+        }
+
+        private static void LowlightConsole(string input)
+        {
+            HighlightConsole(true, 1);
             Console.WriteLine(input);
             HighlightConsole(false);
         }

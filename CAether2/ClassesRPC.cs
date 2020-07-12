@@ -1,11 +1,5 @@
-﻿using PcapDotNet.Core;
-using PcapDotNet.Packets;
+﻿
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CaEthernet
 {
@@ -289,20 +283,6 @@ namespace CaEthernet
 
         public static Random r = new Random();
 
-        //static string iodeviceuuid = "dea00001-6c97-11d1-8271-00a02442df7d";
-        //public static string myactivityuuid = "dea00001-6c97-11d1-8271-123456789012";
-
-
-        //public static string mynulluuid = "00000000-0000-0000-0000-000000000000";
-
-        //public static string myarid = "dea00001-6c97-11d1-8271-123456789012";
-        //public static string myinitiatorid = "dea00000-6c97-11d1-8271-123456789012";
-
-        //public static string UUID_IO_DeviceInterface = "dea00001-6c97-11d1-8271-00a02442df7d";
-        //public static string UUID_IO_ControllerInterface = "dea00002-6c97-11d1-8271-00a02442df7d";
-        //public static string UUID_IO_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
-        //public static string UUID_IO_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
-
         public static string iod_ar_null_uuid = "00000000-0000-0000-0000-000000000000";
         public static string iod_ar_custom_uuid = "10000000-0000-0000-2000-123456789012";
         public static string iod_targetar_custom_uuid = "10000000-0000-0000-2000-123456789012";
@@ -324,8 +304,6 @@ namespace CaEthernet
         public static string myuuid_suffiximf = "123456789016";
 
 
-
-
         // random id führt zu nca_unk_if
         //public static string rpc_activity_uuid {  get{return "10000000-0000-0000-1000-12" + r.Next(1, 90000).IntToHex(8) + "12"; } }
 
@@ -334,8 +312,6 @@ namespace CaEthernet
         public static string rpc_SupervisorInterface = "dea00003-6c97-11d1-8271-00a02442df7d";
         public static string rpc_ParameterServerInterface = "dea00004-6c97-11d1-8271-00a02442df7d";
 
-
-
         // fkt
         public static string ar_sessionkey = "4444";
 
@@ -343,10 +319,6 @@ namespace CaEthernet
         public static int seqnr = 1;
         // rpc aufaddieren ist ok
         public static int rpc_seqnr = 0;
-
-
-
-
 
         public static string BuildRpcNrdDataReq(string objectid, string interfaceid, string activityid, string NrdDataReqRespBody, string operationr2)
         {

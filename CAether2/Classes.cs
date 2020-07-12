@@ -193,9 +193,6 @@ namespace CaEthernet
 
         public byte[] Build()
         {
-            //fefe0500123456780001 0004ffff
-            //fefe0400123456780001 0002ffff
-
             //fefd040012345678 0000 000c 0202 0006 0000746573743434
             // 02" + "02" + "0007" + "0000" + "316531743100";
             var s = _frameId + _serviceId + _serviceType + _xid + _rdf + _data.HexGetNrOfBytes().IntToHex(4) + _data;

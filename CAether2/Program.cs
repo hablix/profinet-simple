@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
-using System.Security.Cryptography;
+
 using System.Text;
 using System.Threading;
 using PcapDotNet.Core;
@@ -10,7 +9,6 @@ using PcapDotNet.Packets;
 using PcapDotNet.Packets.Ethernet;
 using PcapDotNet.Packets.IpV4;
 using PcapDotNet.Packets.Transport;
-using S7.Net;
 
 namespace CaEthernet
 {
@@ -27,8 +25,6 @@ namespace CaEthernet
         static string _macSource1 = "EC:B1:D7:60:BD:8E"; //1 //141.76.83.220
         static string _ipSource1 = "172.16.4.101"; //"141.76.83.220";
         //static string _macSource2 = "C4:E9:84:00:41:2D"; //2 //172.11.4.82 //nicht genuztz
-
-        //static string macSiemens = "00:0E:8C:87:29:55";
 
         static string _macMulticast = "01:0E:CF:00:00:00"; // contact all
 
@@ -116,18 +112,6 @@ namespace CaEthernet
             {
                 ListAllDevices();
             }
-
-            //if (val == "z")
-            //{
-            //    Console.WriteLine("type device to respond to: ");
-            //    Console.WriteLine("type in mac adress in style 00:00:00:00:00:00");
-            //    try
-            //    {
-            //        Sationsname(Console.ReadLine());
-            //    }
-            //    catch (Exception ex)
-            //    { Console.WriteLine(ex.Message); }
-            //}
 
             if (val == "set name")
             {
@@ -225,41 +209,30 @@ namespace CaEthernet
                 { LowlightConsole(ex.Message); }
             }
 
-
-            if (val == "u")
-            {
-                try
-                {
-                    PrintAllResponses();
-                    Console.WriteLine("type device to respond to: ");
-                    int index = 0;
-                    do
-                        Console.WriteLine("type in mac adress index from 0 to " + (_collectedResponses.Count - 1));
-                    while (!int.TryParse(Console.ReadLine(), out index) && index > 0 && index < (_collectedResponses.Count - 1));
-                    Rcp1(index);
-                }
-                catch (Exception ex)
-                { LowlightConsole(ex.Message); }
-            }
-
-            if (val == "a")
-            {
-                try
-                {
-                    Console.WriteLine("rpc impl read, connect req to all devices!");
-                    for (int i = 0; i < _collectedResponses.Count; i++)
-                    {
-                        Rcp1(i);
-                        Thread.Sleep(300);
-                    }
-                    Console.WriteLine("finished.");
-                }
-                catch (Exception ex)
-                { LowlightConsole(ex.Message); }
-            }
-
-
             goto begin;
+        }
+
+        private static void ListAllDevices()
+        {
+            var t = new Thread(() => { Recive(40, IdentificationResponseHandler); });
+            t.Start();
+            SendIdentificationRequest();
+        }
+
+        static void SendIdentificationRequest()
+        {
+            var dcppacket = new DcpPacket();
+            dcppacket.MakeIdentificationRequest();
+            Send(_macMulticast, dcppacket.Build());
+        }
+
+        static void SendSetRequest(string mac, string option, string contentHex)
+        {
+            var dcpdata = new DcpData(option, contentHex);
+            var dcppacket = new DcpPacket();
+            dcppacket.MakeSetRequest(dcpdata.Build());
+            var hex = dcppacket.Build();
+            Send(mac, hex);
         }
 
         private static void Sationsname(string mac)
@@ -289,14 +262,9 @@ namespace CaEthernet
             IpV4Address ipsubnetz = new IpV4Address(value1);
             var s = ipsubnetz.ToValue().ToString("X");
 
-            //AC1001D7FFFFF000F000AC10
-            //000000000000000000000000
-            //SendSetRequest(mac, "0102", "AC1001D7FFFFF000F000AC10".HexShort());
             var t = new Thread(() => { Recive(30, DefaultPacketHandler); });
             t.Start();
             SendSetRequest(mac, "0102",i + s +g);
-            //Recive(30, DefaultPacketHandler);
-
         }
 
         private static void RcpReadFilter(int index)
@@ -399,133 +367,16 @@ namespace CaEthernet
             BuilderClass.rpc_seqnr = 0;
 
             Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00", BuilderClass.rpc_activity_uuid));
-
             Thread.Sleep(1);
-
             Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im1, "00 00", "00 01", BuilderClass.rpc_activity_uuid));
-
             Thread.Sleep(1);
-
             Send(_collectedResponses[index].mac, ip, ConnectRequest(uuid, _macSource1));
-
             Thread.Sleep(400);
-
             Send(_collectedResponses[index].mac, ip, WriteReq(uuid, content));
-
             Thread.Sleep(400);
-
             Send(_collectedResponses[index].mac, ip, ConnectionReleaseReq(uuid));
         }
-
-
-        private static void Rcp1(int index)
-        {
-            string ip = "";
-            string uuid = "";
-            foreach (var dcpdata in _collectedResponses[index].dcpPacket.GetDcpDataPackages())
-            {
-                if (dcpdata.ip() != "")
-                {
-                    ip = dcpdata.ip();
-                }
-                if (dcpdata.ToGuid() != Guid.Empty)
-                {
-                    uuid = dcpdata.ToGuid().ToString();
-                }
-            }
-            Console.WriteLine("connecting: " + _collectedResponses[index].mac);
-            Console.WriteLine("      uuid: " + uuid);
-            Console.WriteLine("        ip: " + ip);
-
-            BuilderClass.seqnr = 0;
-            BuilderClass.rpc_seqnr = 0;
-
-
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0filter, "00 00", "00 00", BuilderClass.rpc_activity_uuid));
-            //Recive(30, UDPDefaultHandler);
-
-            Thread.Sleep(300);
-
-            Send(_collectedResponses[index].mac, ip, ImplicitReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01", BuilderClass.rpc_activity_uuid3));
-            //Recive(30, UDPDefaultHandler);
-
-            Thread.Sleep(400);
-
-            Send(_collectedResponses[index].mac, ip, ConnectRequest(uuid, _macSource1));
-            //Recive(30, UDPDefaultHandler);
-
-            Thread.Sleep(400);
-
-            Send(_collectedResponses[index].mac, ip, ReadReq(uuid, BuilderClass.index_im0, "00 00", "00 01"));
-            //Recive(30, UDPDefaultHandler);
-
-
-            Thread.Sleep(400);
-
-            Send(_collectedResponses[index].mac, ip, ConnectionReleaseReq(uuid));
-            //Recive(30, UDPDefaultHandler);
-
-        }
-
-        //    //SendIdentificationRequest();
-
-
-
-        //    var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-        //    var y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
-
-        //    Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-        //    // x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-        //    // y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ControllerInterface, BuilderClass.myactivityuuid, x);
-
-        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-        //    //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-        //    //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_SupervisorInterface, BuilderClass.myactivityuuid, x);
-
-        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-        //    //x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-        //    //y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x);
-
-        //    //Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-
-
-        //    Thread.Sleep(100);
-
-        //    // connect req
-        //    var mac = _macSource1.HexShort();
-        //    x = BuilderClass.BuildArBlockReq(BuilderClass.myarid, mac, BuilderClass.myinitiatorid);
-        //    y = BuilderClass.BuildRpcNrdDataReq(uuid, BuilderClass.UUID_IO_ParameterServerInterface, BuilderClass.myactivityuuid, x, "00 00");
-        //    Send(_collectedResponses[index].mac, ip, y.HexToByteArray());
-        //    Recive(30, UDPDefaultHandler);
-        //}
-
-        //public static string GetString(string objectid)
-        //{
-
-        //    //var x = BuilderClass.BuildIODHeader(BuilderClass.mynulluuid, BuilderClass.mynulluuid, BuilderClass.index_im0filter);
-        //    //return BuilderClass.ReadRequest(objectid, BuilderClass.UUID_IO_DeviceInterface, BuilderClass.myactivityuuid, x);
-
-        //    //var pack = new RpcHeader()
-        //    //{
-        //    //    header = $"04 00 20 00 - 00 00 00 - 00 {obid} {identid} {activityuuid} (00 00 00 00) (00 00 00 01) (00 00 00 01) (00 05) ffff ffff ((0000)) (00 00) 00 01".HexShort(),
-        //    //    body = new NrdDataReqResp()
-        //    //    {
-        //    //        //                    header = "(00 00 02 51) ((00 00 00 00)) (00 00 02 51) (00 00 00 00) ((00 00 00 00))".HexShort(),
-        //    //        header = "(00 00 00 03) ((00 00 00 00)) (00 00 00 03) (00 00 00 00) ((00 00 00 00))".HexShort(),
-        //    //        body = new IodHeader()
-        //    //        {
-        //    //            // hier block length vergrößern: 58 für iodheader + 2 macht jetzt 60?!
-        //    //            header = $"((00 09)((00 3c)) 01 00) - (00 00) {nulluuid} (00 00 00 00) (00 00) (00 00) (00 00) (f8 40) ((00 00 00 00)) {nulluuid} (00 00 00 00 - 00 00 00 00)".HexShort(),
-        //    //            body = "",
-        //    //        }.Build()
-        //    //    }.Build()
-        //    //};
-        //    //return pack.Build();
-        //}
-
+      
         private static byte[] ImplicitReadReq(string objectuuid, string filter, string slot2, string subslot2, string rpc_activity_uuid)
         {
             // vaiireren von: io_device interface uuid;  und die variablen // "00 09", "00 01", "00 00", "00 01"
@@ -561,9 +412,6 @@ namespace CaEthernet
                 body = content.PadRight(32, ' ').StringToHex() + "".PadLeft(22, ' ').StringToHex()
             };
             var x2 = im0.Build();
-            //var padding = "".PadLeft(24*2, '0');
-            // pad or not
-            //x2 = padding + x2;
             var x = BuilderClass.BuildIODHeaderContent(BuilderClass.iod_ar_custom_uuid, BuilderClass.iod_ar_null_uuid, BuilderClass.index_im1, "00 08", "00 00", "00 01", x2 );
            
             var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_DeviceInterface, BuilderClass.rpc_activity_uuidim1w, x,"00 03");
@@ -576,57 +424,9 @@ namespace CaEthernet
             var y = BuilderClass.BuildRpcNrdDataReq(objectuuid, BuilderClass.rpc_ControllerInterface, BuilderClass.rpc_activity_uuid, x, "00 01");
             return y.HexToByteArray();
         }
-
-
-        private static void Get(string mac)
-        {
-            Console.WriteLine("value:");
-            var value = Console.ReadLine();
-            SendGetRequest(mac, value, "");
-            Recive(10, DefaultPacketHandler);
-
-        }
-
-        private static void ListAllDevices()
-        {
-             var t = new Thread(() => { Recive(40, IdentificationResponseHandler); });
-            t.Start();
-            SendIdentificationRequest();
-        }
-
-
-        static void SendIdentificationRequest()
-        {
-            var dcppacket = new DcpPacket();
-            dcppacket.MakeIdentificationRequest();
-            Send(_macMulticast, dcppacket.Build());
-        }
-
-        static void SendSetRequest(string mac, string option, string contentHex)
-        {
-            var dcpdata = new DcpData(option, contentHex);
-            var dcppacket = new DcpPacket();
-            dcppacket.MakeSetRequest(dcpdata.Build());
-            var hex = dcppacket.Build();
-            //if (option == "0102")
-            //    hex = dcppacket.Build2();
-            Send(mac, hex);
-        }
-
-        static void SendGetRequest(string mac, string option, string contentHex)
-        {
-            var dcpdata = new DcpData(option, contentHex);
-            var dcppacket = new DcpPacket();
-            dcppacket.MakeGetRequest(dcpdata.Build());
-            Send(mac, dcppacket.Build());
-        }
-
+        
         static void Send(string macDest, byte[] content)
         {
-            // Open the output device
-            //using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
-            //                                                             PacketDeviceOpenAttributes.None, // promiscuous mode
-            //                                                             1000)) // read timeout
             {
                 communicator.SendPacket(BuildEthernetPacket(macDest, content));
             }
@@ -634,10 +434,6 @@ namespace CaEthernet
 
         static void Send(string macDest, string ipdest, byte[] content)
         {
-            //// Open the output device
-            //using (PacketCommunicator communicator = selectedDevice.Open(100, // name of the device
-            //                                                             PacketDeviceOpenAttributes.None, // promiscuous 
-            //                                                             1000)) // read timeout
             {
                 communicator.SendPacket(BuildUdpPacket(macDest, ipdest, content));
             }
@@ -645,7 +441,6 @@ namespace CaEthernet
 
 
         // RECIVE
-
         // Method for reciving packets on specified device
         static void Recive(int number, HandlePacket packetHandler)
         {
@@ -667,6 +462,7 @@ namespace CaEthernet
 
         static void UDPDefaultHandler(Packet packet)
         {
+            HighlightConsole(true, 2);
             try
             {
                 if (packet?.Ethernet?.IpV4?.Destination.ToString() == _ipSource1)
@@ -767,6 +563,8 @@ namespace CaEthernet
             }
             catch (Exception ex)
             { LowlightConsole(ex.Message); }
+            HighlightConsole(false);
+
         }
 
         static void DefaultPacketHandler(Packet packet)
@@ -775,7 +573,7 @@ namespace CaEthernet
             {
                 string macsource = packet.Ethernet.Source.ToString();
                 string content = packet.Buffer.ByteArrayToHex();
-
+                HighlightConsole(true, 2);
                 try
                 {
                     var dcppacket = new DcpPacket(content);
@@ -801,6 +599,8 @@ namespace CaEthernet
                 catch (Exception ex)
                 { LowlightConsole(ex.Message); }
                 Console.WriteLine("");
+                HighlightConsole(false);
+
 
             }
         }
@@ -849,6 +649,11 @@ namespace CaEthernet
                 {
                     Console.BackgroundColor = ConsoleColor.Yellow;
                     Console.ForegroundColor = ConsoleColor.Black;
+                }
+                else if (color == 2)
+                {
+                    Console.BackgroundColor = ConsoleColor.Black;
+                    Console.ForegroundColor = ConsoleColor.Cyan;
                 }
                 else
                 {
@@ -1097,21 +902,5 @@ namespace CaEthernet
             var pad = hex.PadLeft(padding, '0');
             return pad.Substring(0, padding);
         }
-
-        //public static byte[] IntToByteArray(this int value, int padding)
-        //{
-        //    var all = BitConverter.GetBytes(value);
-        //    if (padding == 2)
-        //        return new byte[] { all[all.Length - 2], all[all.Length - 1] };
-
-        //    if (padding == 4)
-        //        return new byte[] { all[all.Length - 4], all[all.Length - 3], all[all.Length - 2], all[all.Length - 1] };
-        //}
-
-
-        //public static string HexGetHexLength(this string hex, int padding)
-        //{
-        //    return Program.ByteArrayToHex(new byte[] { (byte)(hex.Length / 2) }).PadLeft(padding, '0');
-        //}
     }
 }

@@ -1,5 +1,8 @@
 # Profinet simple for windows
 
+Windows Console Application for comunicating with PROFINET field devices over a network connection.
+
+## USE
 using the library: https://github.com/PcapDotNet/Pcap.Net
 to use it correctly install it from nuGet and install https://www.winpcap.org/docs/docs_412/html/group__wpcap__tut.html
 
